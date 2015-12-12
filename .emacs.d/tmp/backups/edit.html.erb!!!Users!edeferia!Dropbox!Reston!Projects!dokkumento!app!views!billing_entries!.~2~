@@ -1,0 +1,20 @@
+<%=module_identifier('edit')%>
+
+<div class='span12'>
+ <div class='row'>
+  <div class='span12'>
+    <div id='' data-bind='with: billing_list'>
+     <table style='cursor:pointer;' class='table table-condensed table-hover' width='100%'>
+       <tbody data-bind="foreach: billing_entries">
+         <tr>
+           <td data-bind="text: case_number"></td>
+           <td data-bind="text: billing_date"></td>
+           <td data-bind="text: (description().substring(0,30) + '...')"></td>
+           <td style="text-align:right;" data-bind="text: amount"></td>
+         </tr>
+       </tbody>
+     </table>
+    </div>
+  </div>
+ </div>
+</div>

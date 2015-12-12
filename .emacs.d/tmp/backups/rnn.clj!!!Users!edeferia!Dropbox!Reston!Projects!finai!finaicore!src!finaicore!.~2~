@@ -1,0 +1,144 @@
+(ns finaicore.core
+  (:import (org.encog.ml.data.temporal TemporalDataDescription TemporalPoint TemporalDataDescription$Type))
+  (:require [clojure.core.matrix  :as cm]
+            [clojure.core.matrix.operators :as cmo])
+  (:use
+        (enclog nnets training)
+        )
+  )
+
+
+
+(comment
+  "This class leverages the implementation of a Recurrent Neural Network from
+   the Encog library; well, really on its Clojure wrapper, which lives here:
+   https://github.com/jimpil/enclog
+
+   And this is the underlying java library:
+   https://github.com/encog/encog-java-core/
+
+   Read the comments in the source code to understand the keyword parameters used to
+   initiate the different types of NN:
+
+   https://github.com/jimpil/enclog/blob/master/src/enclog/nnets.clj
+
+   And this gives us access to Chapter 4 of the Clojure for Machine Learning book
+   which illustrates (rather shallowly) how to use this library:
+
+   https://www.scribd.com/doc/237264605/Packt-clojure-for-Machine-learning-apr-2014
+   ")
+
+(def input-length 5)
+(def hidden-layer-length (+ input-length  0))
+
+
+(defn layer-activation [inputs strengths]
+  "forward propagate the input of a layer"
+  (mapv activation-fn
+        (mapv #(reduce + %)
+                     (cmo/* inputs (cm/transpose strengths)))))
+
+(defn output-deltas [targets outputs]
+  "measures the delta errors for the output layer (Desired value – actual value) and multiplying it by the gradient of the activation function"
+  (cmo/* (mapv dactivation-fn outputs)
+          (cmo/- targets outputs)))
+
+(def net
+    (network  (neural-pattern :elman)
+               :activation :sigmoid
+               :input   input-length
+               :output  1
+               :hidden [hidden-layer-length])) ;;a single hidden layer
+
+
+(defn -prepare-training-dataset
+  "DEPRECATED. This function was used to create a training dataset which is
+   not compatible with the training function required for the Elman recurrent
+   network"
+  [prices]
+  (let [input-ds-raw (partition input-length 1 prices)
+        input-ds  (take (- (count input-ds-raw) 1) input-ds-raw)
+        ideal-ds  (partition 1 1 (drop input-length prices))
+        input-rv  (into [] (map #(vec (reverse % )) input-ds))
+        ideal-rv  (into [] (map #(vec (reverse %)) ideal-ds))
+        ]
+    (do
+      (print (count input-rv))
+      (print (count ideal-rv))
+      (print (take 5 input-ds))
+      (print (take 5 ideal-ds))
+      (print (take 5 input-rv))
+      (print (take 5 ideal-rv))
+      (data :basic-dataset input-rv ideal-rv )
+      )
+    )
+  )
+
+
+(defn -create-temporal-point
+  "Create a TemporalPoint object to be part of the time series
+   used for training or prediction"
+  [obs seq]
+        (let [ point (TemporalPoint. 1) ]
+          (do
+            (print ".")
+            (.setSequence point seq)
+            (.setData point 0 obs)
+            point
+            )))
+
+(defn -add-point-to-temporal-dataset
+  "Adds a TemporalPoint to a TemporalDataset."
+  [ds point]
+  (.add (.getPoints ds) point)
+  )
+
+(defn  -prepare-temporal-dataset
+  "Create a temporal dataset for training or inputs for prediction. In most cases, when the data
+   is provided for training, both is-training and is-prediction should be set to true, since the
+   value will be used for prediction as well. When used as a series to be predicted, set is-
+   prediction to true and is-training to false.
+   Note: This code and the functions called from it were derived from the example illustrated in
+   http://www.heatonresearch.com/faq/3/1"
+  [window-size prediction-size series is-training is-prediction]
+  (let [temp-ds (data :temporal-dataset window-size prediction-size)
+        timeseries-desc (TemporalDataDescription.  TemporalDataDescription$Type/RAW is-prediction is-training)
+        seq 0
+        ]
+    (do
+      (print "doing it...")
+      (.addDescription temp-ds timeseries-desc)
+      (println "about to loop..." (count series) "times")
+      (dorun (map  #(-add-point-to-temporal-dataset temp-ds (-create-temporal-point % (inc seq))) series))
+      (println "after mapping")
+      temp-ds
+      )
+    )
+  )
+
+(defn prepare-temporal-training-dataset
+  "Using the following example as a guide:
+   http://www.heatonresearch.com/faq/3/1"
+  [win-size pred-size series]
+  (-prepare-temporal-dataset win-size pred-size series true true)
+  )
+
+(defn prepare-temporal-prediction-dataset
+  "Using the following example as a guide:
+   http://www.heatonresearch.com/faq/3/1"
+  [win-size pred-size series]
+  (-prepare-temporal-dataset win-size pred-size series false true)
+  )
+
+(defn train-timeseries
+  [training-ds limit]
+  (let [nt (trainer :resilient-prop :network net :training-set training-ds) ]
+    (train nt 0.001 limit [])
+    )
+  )
+
+
+(defn predict-next
+  [x1]
+  (first (.getData (.compute net x1)))
+  )

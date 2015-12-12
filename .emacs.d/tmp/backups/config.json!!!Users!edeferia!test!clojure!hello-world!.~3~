@@ -1,0 +1,5 @@
+{
+  "database_server" : "localhost"
+  "database_port" : 27017
+  "database_name" : "dokkumento_api_test"
+}

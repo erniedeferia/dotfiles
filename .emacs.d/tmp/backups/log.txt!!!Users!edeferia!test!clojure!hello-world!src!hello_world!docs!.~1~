@@ -1,0 +1,18 @@
+1. To create the project I started with the command;
+   $ lein new compojure hello-world
+Note: I am using Clojure 1.5.1 and Lein 2.3.3
+
+2. To run the default application created by this process run the command:
+  $ lein ring server
+
+3. To create a WAR and UBERWAR archive, I had to manually add the following
+   dependencies to the project.clj file:
+
+   [hiccup "1.0.2"]
+   [javax.servlet/servlet-api "2.5"]
+
+4. By default static resources are served from "/", hence the references
+   to css file in the generated code needed to be modified to remove
+   nested path. For example, the generated views.clj code had a reference
+   to include-css of "public/css/style.css". I had to change this to
+  "style.css".

@@ -1,0 +1,6 @@
+function CaseNote(data) {
+  var self = this;
+  self.id = data.id;
+  self.text = data.text;
+  self.updated_dt = data.updated_dt;
+};

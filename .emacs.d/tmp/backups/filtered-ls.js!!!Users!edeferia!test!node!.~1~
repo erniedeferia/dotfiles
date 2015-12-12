@@ -1,0 +1,11 @@
+var fs = require("fs");
+var path = require('path');
+
+var lineCount = 0;
+var buf = fs.readdir( process.argv[2], function(err, list) {
+  if( !err )
+    lineCount = buf.toString().split('\n').length-1;
+  else
+    lineCount = 0;
+  console.log(lineCount);
+});

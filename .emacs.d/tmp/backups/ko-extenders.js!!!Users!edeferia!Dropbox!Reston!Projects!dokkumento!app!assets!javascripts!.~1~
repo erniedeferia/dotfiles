@@ -1,0 +1,22 @@
+var  ko_extend = function() {
+     //
+     // Defines an extender which can be applied to any observable property. In this case it
+     // implements "required" validation logic.
+     //
+     ko.extenders.required = function(target, overrideMessage) {
+         target.hasError = ko.observable();
+         target.validationMessage = ko.observable();
+
+         function validate(newValue) {
+             target.hasError(newValue ? false : true);
+             target.validationMessage(newValue ? "" : overrideMessage || "You must provdide a value for this field" );
+         }
+
+         validate(target());
+
+         target.subscribe(validate);
+
+         return target;
+     };
+
+};

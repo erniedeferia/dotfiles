@@ -1,0 +1,7 @@
+$(document).ready( function() {
+
+ if( alexandria_cloud.shouldExecuteModuleFn("billing_member_rates") ) {
+
+ }
+
+});

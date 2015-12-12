@@ -1,0 +1,4 @@
+class Invoice < InvoicingLedgerItem
+ act_as_invoice
+
+end

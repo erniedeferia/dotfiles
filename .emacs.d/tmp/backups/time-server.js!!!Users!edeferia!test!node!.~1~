@@ -1,0 +1,12 @@
+var net = require('net');
+
+function format_dt(d) {
+
+};
+
+var server = net.createServer( function(socket) {
+ var data = format_dt( new Date() );
+ socket.end();
+});
+
+server.listen(process.argv[2]);

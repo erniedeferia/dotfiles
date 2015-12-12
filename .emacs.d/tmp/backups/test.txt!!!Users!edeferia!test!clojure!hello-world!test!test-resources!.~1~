@@ -1,0 +1,12 @@
+(-> (session
+      (ring.middleware.multipart-params/wrap-multipart-params
+          (fn [req]
+             {:status 200
+              :headers {}
+              :body (slurp (get-in req [:params "file" :tempfile]))})))
+    (request "/"
+             :request-method :post
+             :params {"file" (clojure.java.io/file "test-resources/file.txt")})
+    :response
+    :body)
+;=> "hi from file\n"

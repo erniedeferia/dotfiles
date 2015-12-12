@@ -1,0 +1,36 @@
+<% content_for :sidebar_header do %>
+ <p class="lead1">Information & instructions</p>
+<% end %>
+
+<% content_for :sidebar_content do %>
+
+ <p>
+   Use the fields listed below to create a template which will be
+   merged with information from cases. Once the template is created and stored
+   in Dokkumento you will be able generate documents from it.
+ </p>
+ <span class='label label-important'>Available fields</span>
+ <p>
+   <div id="case_fields"></div>
+ </p>
+
+<% end %>
+
+
+<div class="span12">
+
+ <div class="row">
+  <div class="span9">
+    <%= render 'form' %>
+  </div>
+  <div class='span3 offset0'>
+   <%= render "shared/sidebars/basic_static" %>
+  </div> <!-- span4 -->
+ </div>
+ <br />
+ <div class="row">
+   <div class="span3 offset well well-small">
+      <%= link_to "Return to list of Templates", site_document_path %>
+   </div>
+ </div>
+</div>

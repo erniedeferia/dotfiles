@@ -1,0 +1,36 @@
+(ns hello-world.handler
+  (:use compojure.core
+        hello-world.views
+        [hiccup.middleware :only (wrap-base-url)])
+  (:require [compojure.route :as route]
+            [compojure.handler :as handler]
+            [compojure.response :as response]
+            [clj-json.core :as json])
+  (:gen-class :extends javax.servlet.http.HttpServlet))
+
+
+(defn welcome
+  "This function prints the welcome bannter."
+  []
+  (str "<h1>"  "Welcome to Ernie de Feria's first Clojure web app. This is awesome" "</h1>"))
+
+(defn json-response [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/json"}
+      :body (json/generate-string data)})
+
+(defn produce-json
+  "This function produces a json response"
+  []
+  (json-response {:id "3" :value "4"}))
+
+(defroutes main-routes
+  (GET "/" [] (index-page))
+  (GET "/test" []  (welcome))
+  (GET "/json" []  (produce-json))
+  (route/resources "/")
+  (route/not-found "Not Found"))
+
+(def app
+  (-> (handler/site main-routes)
+            (wrap-base-url)))

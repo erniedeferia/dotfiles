@@ -1,0 +1,2 @@
+a = raw_input('What is the value of A?\n')
+print "The value of A is " % a

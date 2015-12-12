@@ -1,0 +1,11 @@
+{
+  "name": "meadowlark",
+  "version": "0.1.0",
+  "description": "A fragrance best used in Paris while programming Java",
+  "main": "meadowlark.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ernie de Feria",
+  "license": "ISC"
+}

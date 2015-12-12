@@ -1,0 +1,4 @@
+modulejs.define("billing_edit_module", ['jquery', 'knockout', 'billing_entry_module'],
+  function($,ko,b) {
+
+});

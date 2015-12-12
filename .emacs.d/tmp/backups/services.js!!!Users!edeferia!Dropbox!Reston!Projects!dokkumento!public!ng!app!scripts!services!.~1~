@@ -1,0 +1,26 @@
+angular.module('matterMod').factory('MatterData', function ($resource, $q) {
+    var resource = $resource('/data/matters/:id', {id: '@id'});
+    return {
+        getMatter: function () {
+            var deferred = $q.defer();
+            resource.get({id: 1},
+                function (matter) {
+                    deferred.resolve(matter);
+                },
+                function (response) {
+                    deferred.reject(response);
+                });
+
+            return deferred.promise;
+        },
+        save: function(matter) {
+            var deferred = $q.defer();
+            matter.id = 999;
+            resource.save(matter,
+                function(response) { deferred.resolve(response);},
+                function(response) { deferred.reject(response);}
+            );
+            return deferred.promise;
+        }
+    };
+});

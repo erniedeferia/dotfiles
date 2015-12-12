@@ -1,0 +1,7 @@
+#!/bin/bash
+
+while read line
+do
+    echo "Fetching data for: $line"
+  curl -s -L -G -d "s=$line&a=10&b=12&c=1996&d=08&e=21&f=2014&g=w&ignore=.csv" http://real-chart.finance.yahoo.com/table.csv  > $line.txt
+done <fidelity_funds.txt

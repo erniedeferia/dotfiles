@@ -1,0 +1,27 @@
+(ns nlp.training.core
+  (:require
+   [clojure.string :refer [join] :as cljstr]
+   [clojure.java.io :as io]
+   [clj-time.core :as t :only [plus months weeks]]
+   [clj-time.format :as ttf :only [formatter unparse]]
+   [clj-time.local :as l :only [local-now]]
+   )
+  (:import [java.io File FileOutputStream])
+ )
+
+
+(defn generate-datetime
+  []
+  (let [d (clj-time.core/plus
+                              (clj-time.core/today-at 12 00)
+                              (clj-time.core/days (rand-int 365))
+                              (clj-time.core/hours (rand-int 23))
+                              (clj-time.core/minutes (rand-nth [10 15 30 45 60])))]
+     (ttf/unparse custom-formatter d)))
+
+
+
+(defn generate-subject
+  [subject-clauses]
+  (rand-nth subject-clauses)
+  )

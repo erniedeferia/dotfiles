@@ -1,0 +1,79 @@
+Contact Import Module
+
+Summary:
+
+The user will uploads a CSV file via a form. The corresponding action stores
+the uploaded data to a temporary collection in MongoDB. The raw data is then
+displayed to the user in a view that will allow her to map the fields in the
+data to the correspoding ones in the Contact model. Once the mapping has been
+completed, the affected field headers will be modified in the raw data to
+match the mapping values. The resulting CSV data will then be passed an
+action whihc uses code similar to the one below to create objects from each
+row. Notice that this works because the headers have been modified to match
+the fields in the Contact model class.
+
+
+#
+# import the file to default storage using the TemporaryFile uploader
+#
+
+# Upload view to support this:
+
+<h2>Upload Contacts (CSV format)</h2>
+<%= form_tag upload_contactss_path, multipart: true do %>
+  <%= file_field_tag :file %>
+  <%= submit_tag "Import" %>
+<% end %>
+
+# in the supporting controller
+def upload
+  File.open( params[:file] ) do |file|
+    uploader = TemporaryFileUploader.new
+    uploader.store!(file
+    @uploaded_filepath = uploader.path)
+  end
+  # pass the @uploaded_filepath to the next view
+  redirect_to 'map' # this view will read header and display mapping form
+end
+
+#
+#  Renders the mapping view
+#
+def map
+  raw_contacts = CSV.read( u.path, :headers => true )
+  @csv_headers = raw_conracts.headers # array of strings, each a header, in order
+  black_listed = %w(  _id created_by
+                      deleted_at deleted_by
+                      updated_by created_at
+                      updated_at tags_array
+                      contact_type encrypted_ssn
+                      encrypted_dob encrypted_spouse_ssn
+                      organization_id )
+  @contact_field = Contact.fields.keys.reject{ |x|  !black_listed.find_index { |i| i == x }.nil? }
+end
+
+#
+# Import the already uploaded csv data using the mapping created in the previous
+# view.
+#
+def import
+  #
+  # equivalent to mappings = Array.new
+  #               mappings << ["E-mail Address, :email]
+  mapppings = params[:mappings]
+
+  #
+  # Iterate over each row, create a contact object, and
+  # using the mappings to "send" the value for each
+  # property. Notice that each field/property has a
+  # :field_name= method. That's the one we're sending
+  # the value to.
+  #
+  CSV.foreach( file_path, :headers => true ) do |r|
+   c = Contact.new
+   mappings.each do |map|
+     c.send( :"#{map[1]}=", r[map[0]] )
+   end
+   c.save
+  end
+end

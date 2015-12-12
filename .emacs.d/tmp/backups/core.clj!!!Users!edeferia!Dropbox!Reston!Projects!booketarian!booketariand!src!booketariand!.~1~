@@ -1,0 +1,13 @@
+(ns booketariand.core
+ (:use [clojure.java.shell :only [sh]] ) 
+  (:gen-class))
+
+
+(defn -main
+  "I don't do a whole lot ... yet."
+  [& args]
+  (println (str "Hello, arguments: " (first args)) )
+  (println "Hello, World!"))
+
+;; Load the command.clj file which defines other vars in this namespace
+(load "command")

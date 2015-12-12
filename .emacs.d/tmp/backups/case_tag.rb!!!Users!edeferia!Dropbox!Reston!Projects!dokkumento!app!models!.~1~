@@ -1,0 +1,5 @@
+class CaseTag
+  include CoreModel
+  f_string     :value
+  f_object_id  :organization_id
+end

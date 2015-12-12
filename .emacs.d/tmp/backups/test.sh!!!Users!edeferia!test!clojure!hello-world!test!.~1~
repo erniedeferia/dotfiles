@@ -1,0 +1,5 @@
+echo "Posting file test-resources/test.txt"
+curl -X POST -i name=first-file -F file=@test-resources/test.txt  http://localhost:3000/documents/
+
+
+echo "Retrieving stored file"

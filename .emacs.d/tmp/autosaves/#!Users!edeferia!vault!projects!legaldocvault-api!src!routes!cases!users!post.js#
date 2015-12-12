@@ -1,0 +1,195 @@
+const _ = require('lodash');
+const bPromise = require('bluebird');
+const path = require('path');
+const moment = require('moment');
+const hat = require('hat');
+
+module.exports = function (site, db) {
+
+  const Route = require('../../../utils/route')(site, db);
+
+  return new Route({
+    url: '/cases/:caseID(\\d+)/users',
+    method: 'post',
+
+    getFormData: function (httpRequest) {
+      var acceptedFields = ['username', 'role'];
+
+      return this.getPostedFormData(httpRequest)
+        .bind(this)
+        .then(function (data) {
+
+          for (var i = 0; i < acceptedFields.length; i++) {
+            var field = acceptedFields[i];
+            if (!_.has(data.fields, field)) {
+              return bPromise.reject(new Error('Missing field "' +
+                field + '"'));
+            }
+          }
+
+          if (!data.fields.username || data.fields.username.replace(/^\s+|\s+$/i, '') === '') {
+            return bPromise.reject(new Error('Invalid value for "username"'));
+          }
+
+          if (!data.fields.role || !this.utils.permissions.ensureValidCaseRole(data.fields.role)) {
+            return bPromise.reject(new Error('Invalid value for "role"'));
+          }
+
+          var acceptedData = {};
+          _.each(acceptedFields, function (field) {
+            acceptedData[field] = '';
+            if (_.has(data.fields, field)) {
+              acceptedData[field] = data.fields[field];
+            }
+          });
+          return acceptedData;
+        })
+    },
+
+    addUserToCaseAndAccount: function (caseID, userID, comboData) {
+      return this.utils.cases.getByID(caseID)
+        .bind(this)
+        .then(function (caseData) {
+          var promises = [];
+          comboData.caseData = caseData;
+          promises.push(this.utils.permissions.addUserToAccountIfNotAlready(comboData.userData.id, caseData.accountID, this.utils.permissions.accountRoles.invitedUser, userID));
+          promises.push(this.utils.permissions.addUserToCaseIfNotAlready(comboData.userData.id, caseData.id, comboData.formData.role, userID));
+          return bPromise.all(promises)
+            .bind(this)
+            .then(function () {
+              comboData.userData.caseRole = this.utils.permissions.getCaseRole(comboData.formData.role);
+            })
+            .return(comboData);
+        })
+    },
+
+    canAddUsersToAccount: function (userID, caseID, formData) {
+      return this.utils.permissions.canAddRoleToCase(userID, caseID, formData.role)
+        .return(formData);
+    },
+
+    addUser: function (userID, formData) {
+      var newUserData = {
+        username: formData.username,
+        password: hat(),
+        enabled: 1,
+        subscribed: 0,
+        firstName: '',
+        lastName: '',
+        companyName: '',
+        referredBy: '',
+        invitedBy: userID,
+        createdAt: parseInt(moment().format('X'), 10)
+      };
+      return this.utils.users.createIfUserDoesNotExist(newUserData)
+        .then(function (userData) {
+          return { userData: userData, formData: formData };
+        });
+    },
+
+    sendNewUserEmail: function (currentUser, newUser, vaultCase) {
+console.log("starting:sendNewUserEmail");
+      var data = {
+        invitedUser: newUser,
+        invitingUser: currentUser,
+        client: vaultCase,
+        role: newUser.caseRole.abb,
+        caseName: vaultCase.caseName,
+        year: (new Date()).getFullYear(),
+        temporaryPassword: this.decrypt(newUser.password)
+      };
+console.log("middle:sendnewUserEmail");
+      var options = {
+        toEmail: newUser.username,
+        toName: (newUser.firstName + ' ' + newUser.lastName),
+        tags: ['created-account-and-added-to-client'],
+        subject: data.caseName
+      };
+console.log("mailer: about to send email");
+      return this.mailer.send('added-new-user-to-client', data, options)
+        .then(function () { return newUser });
+    },
+
+    sendExistingUserEmail: function (currentUser, newUser, vaultCase) {
+console.log("starting: sendExistingUserEmail");
+      var data = {
+        invitedUser: newUser,
+        invitingUser: currentUser,
+        client: vaultCase,
+        role: newUser.caseRole.abb,
+        caseName: vaultCase.caseName,
+        year: (new Date()).getFullYear()
+      };
+console.log("middle of: sendExistingUserEmail");
+
+      var options = {
+        toEmail: newUser.username,
+        toName: (newUser.firstName + ' ' + newUser.lastName),
+        tags: ['created-account-and-added-to-client'],
+        subject: data.caseName
+      };
+console.log("mailer: about to send");
+	return this.mailer.send('added-existing-user-to-client', data, options);
+    },
+
+    sendEmail: function (req, data) {
+
+console.log("sending email:", data);
+      var newUser = data.userData;
+      var caseData = data.caseData;
+
+      if (req.query.hasOwnProperty('unit-tests')) {
+        return bPromise.resolve(newUser);
+      }
+      return req.getCurrentUser()
+        .bind(this)
+        .then(function (currentUser) {
+          if (newUser.hasOwnProperty('new') && newUser.new === true) {
+            return this.sendNewUserEmail(currentUser, newUser, caseData);
+          //  return bPromise.resolve(newUser);
+
+          } else {
+console.log("about to send email to: ", newUser);
+            this.sendExistingUserEmail(currentUser, newUser, caseData);
+            return bPromise.resolve(newUser);
+          }
+        });
+    },
+
+    callback: function (req, res) {
+      if (!req.hasValidToken()) {
+        return res.status(401).json('Invalid vault token');
+      }
+
+      var userID = req.getCurrentUserID();
+      var caseID = parseInt(req.params.caseID, 10);
+
+      this.utils.permissions.ensureUserIsNotDisabled(userID)
+        .bind(this)
+        .then(_.partialRight(this.utils.permissions.canModifyCase, caseID))
+        .return(caseID)
+        .then(_.partial(this.getFormData, req))
+        .then(_.partial(this.canAddUsersToAccount, userID, caseID))
+        .then(_.partial(this.addUser, userID))
+        .then(_.partial(this.addUserToCaseAndAccount, caseID, userID))
+        .then(_.partial(this.sendEmail, req))
+        .then(function (data) {
+          var user = data;
+          if (user.hasOwnProperty('new') && user.new) {
+            res.status(200).json('Created new user');
+          } else {
+            res.status(200).json('Added existing user');
+          }
+        })
+        .catch(function (err) {
+          var error = this.getKnownError(err.message);
+          if (error) {
+            return res.status(error.code).json(error.message);
+          }
+
+          this.logError(err.stack);
+          res.status(500).end();
+        });
+    }
+  });
+}

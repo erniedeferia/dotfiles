@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+
+PREREQUISITES:
+--------------------------------------------------------------------------------
+  a. Install Gulp
+     > npm install --global gulp
+  b. Install MySQL
+     (See Appendeix A - Install MySQL)
+
+
+A. Configure legaldocvault-api
+--------------------------------------------------------------------------------
+
+1. Set up config.js
+  > cp config-example.js config.js
+  > nano config.js
+  # change database names to vault (on production) and vault_dev (on development)
+  # set user and pwd to 'vault'
+
+2. Install npm components
+  > npm install
+
+3. Make sure MySQL is running and database is created
+  >  (See Appendix B - Create vault_dev database)
+  >  mysql.server restart
+
+4. Configure the app with Gulp
+
+ > gulp install-dev
+
+B. Configure legaldocvault-client
+--------------------------------------------------------------------------------
+
+1. Configure the API URL
+  > nano src/config/config.js
+  # Change url to 'http://localhost:3000/api/v1
+
+2. npm install
+
+3. Configure bower components
+  > bower install
+  (if cache error, clear cache: > bower cache clean)
+
+C. Run applications
+--------------------------------------------------------------------------------
+
+1. From legaldocvault-api:
+   > NODE_ENV=development node index
+
+2. From legaldocvault-client
+   > gulp build
+   > node index
+
+   WARNING: At this point all should be OK, but the `gulp build` command did
+            not handle 'lodash' correctly. Thus, 'lodash.js' is missing from
+            the /js/vendor directory under /dist.
+
+            * Downloaded the minified lodash.js file and placed it under
+              dist/vender/js as lodash.js
+
+3. Login to site:
+   (using credentials from:
+      legaldocvault-api/src/database/development/import-data/users.js)
+   > open http://localhost:5001
+   > arian@arianamador.com / pass123!
+
+
+
+Appendix A - Install MySQL
+--------------------------------------------------------------------------------
+
+> brew install mysql
+> mysql_install_db --verbose --user=`whoami` --basedir="$(brew
+     --prefix mysql)" --datadir=/usr/local/var/mysql --tmpdir=/tmp
+
+
+Appendix B - Create vault_dev database
+--------------------------------------------------------------------------------
+>  mysql --user=root mysql
+mysql> CREATE USER 'vault'@'localhost' IDENTIFIED BY 'vault';
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'vault'@'localhost';
+
+
+
+# Get both projects, legaldocvault-client and legaldocvault-api
+# under a root folder. I named this folder 'vault'.
+
+# READ the README on the API and perform the couple of steps described there.
+#
+# MAKE SURE TO RUN `bower install` to get install all bower components.
+#
+
+# IMPORTANT: After copying config.example.js into config.js, modify the development
+# section as follows:
+#
+#     development: {
+#      database: {
+#        client: 'mysql',
+#        connection: {
+#          host: '127.0.0.1',
+#          user: 'vault',
+#          password: 'vault',
+#          database: 'vault_dev'
+#        },
+#        debug: false
+#      },
+#      directory: (__dirname + '/database/development/migrations/'),
+#      tableName: 'mysql-migrations'
+#    }
+#
+#
+
+
+#
+# If brew is out of date, uncomment these lines or just
+# execute them on the shell.
+#
+# brew update
+# brew doctor
+# brew upgrade
+#
+
+brew install mysql
+
+mysql_install_db --verbose --user=`whoami` --basedir="$(brew --prefix mysql)" --datadir=/usr/local/var/mysql --tmpdir=/tmp
+
+
+# Starts off the MySQL server in the
+mysql.server restart
+
+#
+# WARNING: MUST DO THIS PRIOR TO RUNNING THE GULP INSTALL-DEV COMMAND
+# From mysql shell, create database
+#  mysql> CREATE DATABASE vault_dev;
+#  (exit)
+#  mysql --user=root mysql
+#  mysql> CREATE USER 'vault'@'localhost' IDENTIFIED BY 'vault';
+#  mysql> GRANT ALL PRIVILEGES ON *.* TO 'vault'@'localhost';
+
+#
+# Use gulp install-dev task to create necessary tables
+#
+cd legaldocvault-api
+gulp install-dev
+cd ..
+
+
+# Creating SSH key to configure Git shell access
+ cd ~/.ssh
+ ssh-keygen -t rsa -C "ernie.deferia@tibercreek.com"
+
+ Enter name: id_rsa_tiber
+ Enter passphrase: PLM?wsx098
+
+# Edit the ~/.ssh/config file to configure multiple GIT keys
+# Added this host:
+Host source.brittvault.com
+  RSAAuthentication yes
+  IdentityFile ~/.ssh/id_rsa_tiber
+  User ernie.deferia@tibercreek.com
+
+# Added the SSH key to GitLab
+> pbcopy < ~/.ssh/id_rsa_tiber.pub
+# Then pasted it in the SSH Keys tab of GitLab
+
+# Created new directory structure:
+> mkdir  ~/vault/projects && cd ~/vault/projects
+
+# Then issue the following Git clone command:
+> git clone git@source.brittvault.com:carldanley/legaldocvault-client.git
+> git clone git@source.brittvault.com:carldanley/legaldocvault-api.git

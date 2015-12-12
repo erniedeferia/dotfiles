@@ -1,0 +1,7 @@
+class CaseNotesController < AlexandriaCloudController
+  include TermsOfServicesAgreement
+  respond_to :json
+  actions    :all
+
+
+end

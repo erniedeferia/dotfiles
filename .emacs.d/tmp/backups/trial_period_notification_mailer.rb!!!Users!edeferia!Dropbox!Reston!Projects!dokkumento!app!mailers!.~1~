@@ -1,0 +1,15 @@
+class TrialPeriodNotificationMailer < ActionMailer::Base
+
+  def notify(event, message)
+    @notification = {:event => event, :message => message}
+    mail(
+      :to       => Settings.sysadmin_email,
+      :from     => Settings.mail_sender_address,
+      :subject  => "Dokkumento Trial Period Expiration Notification")
+  end
+
+  def self.last_email
+    ActionMailer::Base.deliveries.last
+  end
+
+end

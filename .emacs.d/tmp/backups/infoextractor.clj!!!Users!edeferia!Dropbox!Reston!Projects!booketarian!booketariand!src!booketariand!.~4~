@@ -1,0 +1,36 @@
+(ns booketariand.core
+  (:use [clojure.java.shell :only [sh]]) )
+
+(def PDF_META_MATCHER {:author #"(?m)^Author:\s+([^\n]+)"
+                       :date #"(?m)^CreationDate:\s+([^\n]+)"
+                       :creator #"(?m)^Creator:\s+([^\n]+)"
+                       :keywords #"(?m)^Keywords:\s+([^\n]+)"
+                       :producer #"(?m)^Producer:\s+([^\n]+)"
+                       :subject #"(?m)^Subject:\s+([^\n]+)"
+                       :title #"(?m)^Title:\s+([^\n]+)"
+                       :length #"(?m)^Pages:\s+([^\n]+)"
+                      })
+
+(defn extract_all
+  "User the UNIX pdfinfo utility to read  metadata from a specified PDF file (pdfs), then
+  extracts each metadata key/value using regular expressions for each. The map incantation
+  maps each element of the key-regex hashmap (PDF_META_MATCHER) to an extracted value in
+  the form of {:key extacted-value}. Notice the use of (assoc results key extracted-value) to
+  create each of these. Is this the most efficient way of doing this? Also note that (into {})
+  converts the ({a,b}, {c,d},...) into {a b, c d,...}; the latter being more easily indexed
+  using keywords."
+  [pdfs, opts]
+  (let [cmd "/usr/local/bin/pdfinfo"
+        pdf_meta (:out (sh cmd (first pdfs)))
+        results {}
+        ]
+    (into {}  (map
+        #(assoc  results (nth % 0)  (nth (re-find (nth % 1) pdf_meta) 1 )  )
+        PDF_META_MATCHER ))
+    )
+  )
+
+(defn extract
+  [key, pdf, opts]
+  (key (extract_all pdf opts))
+  )

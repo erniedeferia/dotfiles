@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+        echo "Error: please specify environment [staging|production] to the provision script"
+        exit 1
+fi
+
+DEPLOYMENT_ENV=$1
+
+# This script creates the ec2 instance and populates two environment variables with the name
+# of the instance and its ID: INSTANCE_NAME, INSTANCE_ID.
+
+if [ "$1" == "staging" ]; then
+   echo "Removing entry from known_host for 50.17.240.65, the staging host..."
+   ssh-keygen -R 50.17.240.65
+fi
+
+
+
+bundle exec rails console %

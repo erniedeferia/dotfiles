@@ -1,0 +1,115 @@
+So, MNR or Medical Not Ready is a package that we will track 
+
+MODS P3 profile will be the trigger that initiates a case for MNR Tracker.
+
+Initiation goes to the RSC (Geographical Area). There is an AGR nurse (Case Reviewers) that gets 
+this Profile. The case gets assigned to someone within the RSC or sub-ordinate
+units. There are about 7 case managers per RSCs. 
+
+If the soldier leaves in California but the unit resides in a different RSC then
+we need a system to re-assign a case across RSCs.
+
+
+MMA handles duty related
+
+RSC (these are the 4 geographical areas + Europe and PAC) handles non-duty related.
+
+There is a system called eProfile that has the medical profile. When they say load
+the profile they mean bringing that information into MNR Tracker. 
+
+Review medical records = AHLTA, VISTA to see if associated with this profile.
+
+PHA, LHI (HRR that is in MEDCHARTS) = what are these, we need to link them to these system.
+
+Needs a check-mark that medical records exists. If there are medical records then first clue that this 
+duty related injury. So, it appears that multiple changes in PULHES will merge into a single case.
+This should not generate multiple cases within MNR Tracker.
+
+So we need alerts that subsequent PULHES changes have ocurred.
+
+
+
+
+________________________________________
+From: Ernie de Feria
+Sent: Tuesday, April 10, 2012 2:49 PM
+To: Glenn Adams
+Subject: FW: Notes from 3/6/2012 w/ MNR customer
+
+Refresher!!!
+
+-----Original Message-----
+From: Ernie de Feria
+Sent: Tuesday, March 06, 2012 11:21 AM
+To: Glenn Adams; Patti Hamill
+Subject: Notes from 3/6/2012 w/ MNR customer
+
+----------------------------------------------------------------
+I. Participants
+----------------------------------------------------------------
+Maj. Wellman
+Mr. Mark Osteen
+Glenn Adams
+Patti Hamill
+Ernie de Feria
+
+----------------------------------------------------------------
+II. Notes
+----------------------------------------------------------------
+(1) Medical Not Ready (MNR) - There are pending operational orders to be able to define
+this business process. So we'll postpone it and instead concentrate on the various other
+soldier actions as listed below. The goal is to prototype it and put in front of the
+user community.
+
+Soldier Action Categories
+
+        LOD             - Line of Duty  Investigation
+        INCAPS  - (incapacitation pay)
+        12301H  (health-related issue, orders)
+                        MRP - Medical Review Process (while in mobilization order)
+                        MRP2 - Medical Review Process 2 - (when a break in service)
+        ADME            - Active Duty Medical Evaluation (while in TPU and in weekend drill
+                        or in annual training)
+        ADOS-RC         - Active Duty for Operational Support - Reserve Component
+        ETS             - Expiration Term of Service
+        MRD-E           - MANDATORY RETIREMENT DATE - EXTENSION (mostly for medical reason)
+
+(2) Initially the prototype will just track the fact that a case of specific type has
+been initiated, capture documentation for the case, and be able to share notes about it.
+Then the case is closed.
+
+(3) ELOD - Electronic Line of Duty - a system that captures this information.
+        a Who owns this?
+
+(4) Mark described that current software just track PENDING and APPROVED. They recommended
+that our system just provides links to external systems such as ELOD to review the
+details of the case.
+
+(5) INCAPS. In this case, we do want some forms that need to be filled out. For this case
+    type, the initiation is at the unit level of detail. When a unit starts one the
+    case shows up in someone's work-bucket at the HQ level.
+
+(6) The customer will have the forms by the end of this week.
+
+(7) LOD, 1230H, are just investigation, tracking of the overall case type. Display the
+    order. But not much else is done within it. They just want to know that the case
+    exists.
+
+(8) INCAPS, ETS, MRD-E are processes with approval steps and so on.
+
+(9) We agreed that the first two cases will be LOD and INCAPS
+
+(10) They will provide more INCAPS information next week.
+
+....
+
+I stopped taking notes here...
+
+
+Ernie de Feria
+Principal Engineer
+Tiber Creek Consulting, Inc
+ernie.deferia@tibercreek.com
+P: 703.539.6370
+
+

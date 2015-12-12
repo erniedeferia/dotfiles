@@ -1,0 +1,10 @@
+# maps many document templates to a case type
+class CaseTypeArtifact
+  include CoreModel
+
+  f_string :name
+
+  has_one   :practice_area
+  has_and_belongs_to_many  :template, :class_name => 'DocumentTemplate', :inverse_of => :case_type_artifact
+
+end

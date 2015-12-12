@@ -1,0 +1,84 @@
+#
+# This class represents case folder from a member's Dropbox account.
+#
+#
+class CaseFolder
+  include Concurrent::Async
+
+  attr_accessor  :member_id, :org_id, :case_id, :folder, :connection_info, :files
+
+  def initialize( attrs = {} )
+    init_mutex
+    @member_id = attrs[:member_id]
+    @org_id = attrs[:org_id]
+    @case_id = attrs[:case_id]
+    @folder = attrs[:folder]
+    @connection_info = attrs[:connection_info]
+  end
+
+  #
+  # Do not call this method directly. Instead, use #.async.get_remote_content
+  # Retrieves the content of the Dropbox folder aynchronously.
+  #
+  def list_remote
+   client = Dropbox::API::Client.new(:token => @connection_info[:token], :secret =>  @connection_info[:secret] )
+   @files = client.ls @folder
+  end
+
+  #
+  # Retrieves the list of folders (instances of this class) under the <dokkumento>
+  # sandbox on Dropbox for each member who has activated Dropbox integration.
+  #
+  def self.all
+    _case_folders = Array.new
+    q = Queue.new
+
+    MongoConfig.database[:members].find(:dropbox_access_key => {"$exists" => true}).each do |m|
+
+     q << Concurrent::Promise.execute do
+       client = Dropbox::API::Client.new( :token => m["dropbox_access_key"],
+                                          :secret => m["dropbox_access_secret"])
+       folders = client.ls.keep_if { |f| f.is_dir }
+       # return folders to the promise fullfillment handlers
+       folders
+     end
+     .then do |folders|
+        # At this point the promise is fullfilled, regardless of the work done below
+        q.pop
+        folders.each do |f|
+           DokkLogger.instance.info  "Retrieving metadata from #{f.path} for member:  #{m['last_name']} #{m['last_name']}"
+          _case_id = case_id_from_case_number(f.path)
+
+          DokkLogger.instance.info "Found case-id for the folder-name #{f.path} with value #{_case_id}"
+
+          if !_case_id.nil? then
+            _case_folders << CaseFolder.new( :org_id    => m["organization_id"].to_s,
+                                             :case_id   => _case_id.to_s,
+                                             :folder    => f.path,
+                                             :member_id => m["_id"].to_s,
+                                             :connection_info => { :token => m["dropbox_access_key"],
+                                                                   :secret => m["dropbox_access_secret"] } )
+          end
+        end
+     end
+     .then( Proc.new { |result| puts result } )
+
+    end
+
+    # block until all promise have been fullfilled. Notice that fullfilment is measured by
+    # the number of prommises left in the Queue q. Each promise is removed from the queue
+    # when fullfilled in the second chained .then above.
+    begin
+      sleep(3)
+    end while q.length > 0
+    _case_folders
+  end
+
+private
+
+  def self.case_id_from_case_number(case_number)
+     c = MongoConfig.database[:cases].find(:case_number => case_number).first
+     c['_id'] unless c.nil?
+  end
+
+end

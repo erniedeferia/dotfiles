@@ -1,0 +1,10 @@
+var fs = require("fs");
+
+var lineCount = 0;
+var buf = fs.readFileSync( process.argv[2], function(err, buf) {
+  if( !error )
+    lineCount = buf.toString().split('\n').length-1;
+  else
+    lineCount = 0;
+  console.log(arrLines.length-1);
+});

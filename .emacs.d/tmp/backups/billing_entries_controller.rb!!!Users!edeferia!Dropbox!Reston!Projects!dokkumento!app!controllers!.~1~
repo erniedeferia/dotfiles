@@ -1,0 +1,22 @@
+class BillingEntriesController < AlexandriaCloudController
+
+
+ def resource
+   @billing_entry = params[:type].constantize.new
+   @billing_entry = BillingEntryExpense.find(params[:id]) if is_update_for?('BillingEntryExpense')
+   @billing_entry = BillingEntryTime.find(params[:id]) if is_update_for?('BillingEntryTime')
+
+   @billing_entry = BillingEntryExpense.new(params[:billing_entry])
+ end
+
+
+ private
+  def retrieve_object(params)
+    params[:type].constantize.new if params.has_key?(:id)
+  end
+
+  def create_object(params)
+     params[:type].constantize.new if !params.has_key?(:id)
+  end
+
+end

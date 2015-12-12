@@ -1,0 +1,17 @@
+delete from `legaldocvault-dev.accountUsers`;
+delete from `legaldocvault-dev.attachments`;
+delete from `legaldocvault-dev.pleadings`;
+delete from `legaldocvault-dev.caseUsers`;
+delete from `legaldocvault-dev.cases`;
+delete from `legaldocvault-dev.accounts`;
+DELETE FROM `legaldocvault-dev.users`;
+
+
+
+ALTER TABLE `legaldocvault-dev.accountUsers` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.accounts` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.attachments` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.pleadings` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.caseUsers` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.users` AUTO_INCREMENT = 1;
+ALTER TABLE `legaldocvault-dev.cases` AUTO_INCREMENT = 1;

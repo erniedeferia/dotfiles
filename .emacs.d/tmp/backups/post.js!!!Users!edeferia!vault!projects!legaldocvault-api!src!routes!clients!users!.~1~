@@ -1,0 +1,249 @@
+const bPromise = require('bluebird');
+const moment = require('moment');
+const _ = require('lodash');
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
+const s3 = require('../../../utils/amazon-s3');
+const dateFormat = 'YYYY-MM-DD HH:mm:ss';
+const deleteFile = bPromise.promisify(fs.unlink);
+
+module.exports = function(site, db) {
+
+  const Route = require('../../../utils/route')(site, db);
+
+  return new Route({
+    url: '/clients/:clientID(\\d+)/pleadings',
+    method: 'post',
+
+    getFormData: function(httpRequest) {
+      var acceptedFields = [
+        'name', 'shortName', 'filedBy', 'type', 'docketDate', 'dateFiled',
+        'dateSigned', 'docketID', 'attachments'
+      ];
+
+      return this.getPostedFormData(httpRequest)
+        .bind(this)
+        .then(function(data) {
+          var acceptedData = {};
+
+          _.each(acceptedFields, function(field) {
+            acceptedData[field] = '';
+            if (_.has(data.fields, field)) {
+              acceptedData[field] = data.fields[field];
+            }
+          });
+
+          // try converting attachments to an array so we can work with it
+          // easier
+          try {
+            acceptedData.attachments = JSON.parse(acceptedData.attachments);
+          } catch (err) {
+            acceptedData.attachments = [];
+          }
+
+          return this.parseUserInput(acceptedData);
+        });
+    },
+
+    parseUserInput: function(data) {
+      // make sure everything is in the format we expect it to be in
+      if (_.has(data, 'filedBy') && !this.filedByIsValid(data.filedBy)) {
+        return bPromise.reject(new Error('Invalid value for "filedBy"'));
+      } else if (_.has(data, 'type') && !this.typeIsValid(data.type)) {
+        return bPromise.reject(new Error('Invalid value for "type"'));
+      }
+
+      // convert any/all dates to an integer
+      ['docketDate', 'dateFiled', 'dateSigned'].forEach(function(field) {
+        var time = moment(data[field], dateFormat).format('X');
+        data[field] = parseInt(time, 10);
+
+        if (_.isNaN(data[field])) {
+          data[field] = 0;
+        }
+      });
+
+      return bPromise.resolve(data);
+    },
+
+    filedByIsValid: function(value) {
+      var whiteListed = ['client', 'opposing', 'court', 'other'];
+      return whiteListed.indexOf(value) > -1;
+    },
+
+    typeIsValid: function(value) {
+      var whiteListed = ['general-pleading', 'notice', 'order', 'discovery'];
+      return whiteListed.indexOf(value) > -1;
+    },
+
+    createAttachments: function(clientHash, pleadingID, attachments, req) {
+      if (!attachments.length) {
+        return bPromise.resolve();
+      }
+
+      var promises = [];
+
+      _.each(attachments, function(tmpFileHash) {
+        promises.push(this.createAttachment(clientHash, pleadingID,
+          tmpFileHash, req));
+      }.bind(this));
+
+      return bPromise.all(promises);
+    },
+
+    createPleading: function(pleadingData, httpRequest) {
+      var userID = httpRequest.getCurrentUserID();
+      var clientID = parseInt(httpRequest.params.clientID, 10);
+
+      // pull out the attachments
+      var attachments = pleadingData.attachments;
+      delete pleadingData.attachments;
+
+      return this.utils.pleadings.create(pleadingData, userID, clientID)
+        .bind(this)
+        .then(function(newPleading) {
+          return bPromise.props({
+            pleadingID: bPromise.resolve(newPleading.id),
+            client: this.utils.clients.getByID(clientID, userID)
+          });
+        })
+       .then(function(data) {
+          return this.createAttachments(data.client.hash, data.pleadingID,
+            attachments, httpRequest)
+            .return(data);
+        })
+        .then(function(data) {
+          var pleadingID = data.pleadingID;
+          delete data.pleadingID;
+
+          return this.utils.pleadings.getByClientID(clientID, pleadingID)
+            .then(function(pleading) {
+              data.pleading = pleading;
+            })
+            .return(data);
+        }).then(function(data) {
+          try
+          {
+            site.cronJobs.pleadingsUploadEmailer.addClient(clientID);
+          }
+          catch (ex)
+          {
+            // we dont want to prevent the UI from working if an error in the emailer occurs.
+            this.logError(ex.stack);
+          }
+          return data;
+        });
+    },
+
+    fileExists: function(filePath) {
+      return new bPromise(function(resolve, reject) {
+        fs.exists(filePath, function(exists) {
+          if (!exists) {
+            return reject(new Error('Temporary attachment not found'));
+          }
+
+          resolve(filePath);
+        });
+      });
+    },
+
+    createAttachment: function(clientHash, pleadingID, fileHash, httpRequest) {
+      var userID = httpRequest.getCurrentUserID();
+      var attachment = httpRequest.session.uploadedFiles[fileHash];
+      var attachmentHash = this.utils.attachments.generateHash() +
+        path.extname(attachment.name).toLowerCase();
+
+      var data = {
+        hash: attachmentHash,
+        amazonS3Key: (clientHash + '/' + pleadingID + '/' + attachmentHash),
+        size: attachment.size,
+        name: attachment.name,
+        type: attachment.type,
+        documentID: pleadingID,
+        documentType: 'pleading'
+      };
+
+      return s3.uploadFile(attachment.path, data.amazonS3Key)
+        .return(data)
+        .then(_.partialRight(this.utils.attachments.create, userID))
+        .return(attachment.path)
+        .then(deleteFile)
+        .then(function() {
+          delete httpRequest.session.uploadedFiles[fileHash];
+          httpRequest.session.save();
+        });
+    },
+
+    ensureAttachmentsAreValid: function(session, attachments) {
+      if (!attachments.length) {
+        return bPromise.resolve();
+      } else if (!_.has(session, 'uploadedFiles')) {
+        return bPromise.reject(new Error('Temporary attachment not found'));
+      }
+
+      var promises = [];
+      var attachment;
+
+      for (var i = 0, len = attachments.length; i < len; i++) {
+        attachment = attachments[i];
+
+        // make sure the file was uploaded by this user (and is in their
+        // session)
+        if (!_.has(session.uploadedFiles, attachment)) {
+          return bPromise.reject(new Error('Temporary attachment not found'));
+        }
+
+        // check that the file actually exists on disk
+        attachment = session.uploadedFiles[attachment];
+        promises.push(this.fileExists(attachment.path));
+      }
+
+      return bPromise.all(promises);
+    },
+
+    callback: function(req, res) {
+      if (!req.hasValidToken()) {
+        return res.status(401).json('Invalid vault token');
+      }
+
+      var userID = req.getCurrentUserID();
+      var clientID = parseInt(req.params.clientID, 10);
+
+      this.utils.permissions.ensureUserIsNotDisabled(userID)
+        .bind(this)
+        .then(_.partialRight(this.utils.permissions.canModifyClient, clientID))
+        .return(req)
+        .then(this.getFormData)
+        .then(function(data) {
+          // force the updatedBy and createdBy to the current user
+          var currentTime = parseInt(moment().format('X'), 10);
+          data.createdBy = userID;
+          data.createdAt = currentTime;
+          data.updatedBy = userID;
+          data.updatedAt = currentTime;
+          data.clientID = clientID;
+
+          return data;
+        })
+        .then(function(data) {
+          return this.ensureAttachmentsAreValid(req.session, data.attachments)
+            .return(data);
+        })
+        .then(_.partialRight(this.createPleading, req, userID, clientID))
+        .then(function(data) {
+          res.status(200).json(data);
+        })
+        .catch(function(err) {
+          var error = this.getKnownError(err.message);
+          if (error) {
+            return res.status(error.code).json(error.message);
+          }
+
+          this.logError(err.stack);
+          res.status(500).end();
+        });
+    }
+
+  });
+};

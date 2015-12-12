@@ -1,0 +1,11 @@
+class BraintreeInterfaceController < AlexandriaCloudController
+
+ def new
+     @tr_data = Braintree::TransparentRedirect.create_customer_data(
+                     :redirect_url => user_braintree_confirm_url,
+                     :customer => {
+                      :company => @user.name
+                     })
+ end
+
+end

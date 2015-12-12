@@ -1,0 +1,94 @@
+(ns finaicore.core
+ (:use (incanter core stats))
+ )
+
+(defn fi-max
+  [prices]
+  (apply max prices)
+  )
+
+(defn fi-min
+  [prices]
+  (apply min prices)
+  )
+
+(defn fi-log
+  [prices]
+  (into [] (map #(Math/log %) prices))
+  )
+
+(defn fi-diff
+  "Equivalent to R's diff function. It returns an array size prices.length -1
+   with the difference betwen consecutive elements. Given a vector with values
+   [2 1 4 2] it will return [-1 3 -2] from [(1-2), (4-1), (2-4)]."
+  [prices]
+  (into [] (map #(- (nth % 1) (nth % 0))  (partition 2 1 prices)))
+  )
+
+(defn fi-subtract
+  "Subtract each element of data2 from data1."
+  [data1 data2]
+  (into [] (map #(- %1 %2) data1 data2 ))
+  )
+
+(defn fi-sum
+  "Computes the sum of the given price series"
+  [prices]
+ (apply + prices )
+  )
+
+(defn fi-mean
+  "Computes the mean of the given price series"
+  [series]
+  (/ (reduce + series) (float (count series) ) )
+  )
+
+(defn fi-variance
+  "Computes the variance of the given price series"
+  [prices]
+   (variance prices)
+  )
+
+(defn fi-stdev
+  "Computes the standard deviation of the given price series"
+  [prices]
+  (Math/sqrt (fi-variance prices) )
+  )
+
+(defn fi-scale
+  "Scales a vector by the specified factor"
+  [prices factor]
+  (into [] (map #(* % factor) prices) )
+  )
+
+(defn fi-positive-part
+  [prices]
+   (into [] (map #(max % 0.0) prices))
+  )
+
+(defn fi-negative-part
+  [prices]
+  (into [] (map #(min % -0.0) prices))
+  )
+
+(defn fi-dot-product
+  "Computes the dot product of two vectors (matrix). The input
+   expected is in teh form of [] []. Thus, a sample invocation:
+   (fi-dot-product [1 2 3] [3 5 6]).
+   Precondition: the length of each vector must be equal."
+  [& matrix]
+  {:pre [(apply == (map count matrix))]}
+  (apply + (apply map * matrix)))
+
+
+(defn simple-exp-ret
+  "Returns a very simple measure of expected returns, just the
+   historical average. The month over month return is defined as
+   (p1 - p0)/p1 or p1/p2 - 1. The partitvion form takes two elements
+   from the sequence in steps of 1, this gives us the moving window
+   needed to compute the month over month retruns."
+  [prices]
+  (/ (reduce + (map #(- (/ (nth % 1) (nth % 0)) 1)  (partition 2 1 prices)) ) (count prices))
+  )
+
+(comment "implement the basic math functions described in: https://github.com/charles-cooper/idylfin/blob/master/src/com/idylwood/utils/MathUtils.java")

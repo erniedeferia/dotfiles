@@ -1,0 +1,14 @@
+require 'spec_helper'
+
+describe Case do
+ it "is valid with name, description, and type" do
+   template = DocumentTemplate.new
+   template.name = "My template"
+   template.description =  "My template description"
+   template.document_type = DocumentType.first
+   expect(template).to be_valid
+ end
+ it "is invalid without name"
+ it "is valid without description"
+ it "is invalid without a type"
+end

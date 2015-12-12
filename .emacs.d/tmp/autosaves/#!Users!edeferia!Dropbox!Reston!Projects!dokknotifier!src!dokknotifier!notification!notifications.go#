@@ -1,0 +1,281 @@
+package notification
+
+import (
+	"fmt"
+	"labix.org/v2/mgo"
+	"labix.org/v2/mgo/bson"
+	"time"
+	"log"
+	"io/ioutil"
+	"dokknotifier/config"
+)
+
+const coll_name_reminders = "reminders"
+const coll_name_events = "events"
+const coll_name_event_participants = "event_participants"
+var   dbname string
+
+
+type Reminder struct {
+	Send_to          string
+	Time_Offset      string
+	Time_Offset_Type string
+	Reminder_send_dt time.Time
+	Event_ID         bson.ObjectId
+	Updated_at       time.Time
+	Created_At       time.Time
+}
+
+type Event struct {
+	ID              bson.ObjectId `json:"Id" bson:"_id"`
+	Location        string
+	Starts_At_Date  time.Time
+	Starts_At_Time  string
+	Ends_At_Date    time.Time
+	Ends_At_Time    string
+	Title           string
+	Description     string
+	All_Day         bool
+	Case_Number     string
+	Starts_at       time.Time
+	Ends_at         time.Time
+	Organization_ID bson.ObjectId
+	CaseID          bson.ObjectId
+	Updated_At      time.Time
+	Created_at      time.Time
+}
+
+type EventParticipant struct {
+	Email    string
+	Name     string
+	Event_ID bson.ObjectId
+}
+
+type Notification struct {
+	// []MemberParticipant.Email
+	To []string
+	// Event.Title
+	Subject string
+	// Event.Description
+	Description string
+	// Event.Starts_At
+	Starts_at time.Time
+	// Event.Location
+	Location string
+}
+
+func init() {
+	dbname = config.GetMongoDatabaseName()
+	log.Printf("database name: %s", dbname)
+}
+
+// Gets a list of notifications for reminders due in the next minute.
+func GetNotifications(s *mgo.Session, report chan string) ([]Notification, error) {
+
+	report <- fmt.Sprintf("Inside GetNotifications...")
+
+	var loc,_ = time.LoadLocation("US/Eastern")
+
+	var tWindowStart = time.Now().In(loc) //.Add( time.Duration(-600)*time.Minute)
+	var tWindowEnd = tWindowStart.Add(time.Duration(1) * time.Minute).In(loc)
+
+	// http://golang.org/src/pkg/time/format.go for the reference time format
+	//var   dateLayout   = "2006-01-02T15:04:05.123Z"
+
+	var tWindowFilter = bson.M{"reminder_send_dt": bson.M{"$gte": tWindowStart, "$lt": tWindowEnd}}
+
+
+	report <- fmt.Sprintf("Reminder filter %s: ", tWindowFilter)
+
+	//debugLoadReminders(s, tWindowFilter)
+
+	// load reminders due in the next minute
+	reminders, err := loadReminders(s, tWindowFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	debugEventsForReminders(s, reminders)
+
+	// load related events
+	events, _ := loadEventsForReminders(s, reminders)
+
+	// load participants for all reminders in the window
+	participants, _ := loadParticipantsForReminders(s, reminders)
+
+	fmt.Println("Loaded", len(participants), "participants")
+
+	notifications := []Notification{}
+
+	// Get the participants for each event...
+	for iE := 0; iE < len(events); iE++ {
+		// get the event participants
+		eventParticipants := filterParticipantsByEvent(participants, events[iE])
+
+		fmt.Println("Filtered down participants for current event to:", len(eventParticipants))
+
+		// get the associated reminder
+		reminder := reminderForEvent(reminders, events[iE])
+
+		// Build a notification struct with the current event and its participants
+		notifications = append(notifications, makeNotification(events[iE], reminder, eventParticipants))
+
+	}
+
+	return notifications, nil
+}
+
+// get the reminder associated with the event
+func reminderForEvent(reminders []Reminder, event Event) Reminder {
+
+	reminder := Reminder{}
+
+	for i := 0; i < len(reminders); i++ {
+		if reminders[i].Event_ID == event.ID {
+			reminder = reminders[i]
+			break
+		}
+	}
+
+	return reminder
+}
+
+// get participants for given event
+func filterParticipantsByEvent(participants []EventParticipant, event Event) []EventParticipant {
+	var eventParticipants = []EventParticipant{}
+
+	for i := 0; i < len(participants); i++ {
+		fmt.Println("Comparing participant event id of", participants[i].Event_ID, "to event id of:", event.ID)
+		if participants[i].Event_ID == event.ID {
+			eventParticipants = append(eventParticipants, participants[i])
+		}
+	}
+
+	return eventParticipants
+}
+
+
+func debugLoadReminders(s *mgo.Session, filter bson.M) error {
+	var arrReminders = []Reminder{}
+	rC := s.DB(dbname).C("reminders")
+	err := rC.Find(nil).Iter().All(&arrReminders)
+
+	// If error while retrieving reminders, return it.
+	if err != nil {
+		return err
+	}
+
+	// If there are not reminders, return nil
+	if len(arrReminders) == 0 {
+		fmt.Println("loadReminders: There are no reminders in the specified window")
+		return nil
+	} else {
+		for i := 0; i < len(arrReminders); i++ {
+			log.Println(arrReminders[i])
+		}
+	}
+
+	return nil
+
+}
+
+// Loads the reminders for the specified time window/filter criteria
+func loadReminders(s *mgo.Session, filter bson.M) ([]Reminder, error) {
+	var arrReminders = []Reminder{}
+	rC := s.DB(dbname).C("reminders")
+	err := rC.Find(filter).Iter().All(&arrReminders)
+
+	// If error while retrieving reminders, return it.
+	if err != nil {
+		return nil, err
+	}
+
+	// If there are not reminders, return nil
+	if len(arrReminders) == 0 {
+		fmt.Println("loadReminders: There are no reminders in the specified window")
+		return nil, nil
+	}
+
+	return arrReminders, nil
+}
+
+// Returns the events associated with the set of reminders passed in.
+func loadEventsForReminders(s *mgo.Session, reminders []Reminder) ([]Event, error) {
+	var events = []Event{}
+
+	var arrEventIDs = []bson.ObjectId{}
+	for i := 0; i < len(reminders); i++ {
+		arrEventIDs = append(arrEventIDs, reminders[i].Event_ID)
+	}
+
+	var fEventFilter = bson.M{"_id": bson.M{"$in": arrEventIDs}}
+
+	eventColl := s.DB(dbname).C("events")
+	err := eventColl.Find(fEventFilter).Iter().All(&events)
+
+	return events, err
+}
+
+// Returns the events associated with the set of reminders passed in.
+func debugEventsForReminders(s *mgo.Session, reminders []Reminder) {
+	var events []bson.M
+
+	var arrEventIDs = []bson.ObjectId{}
+	for i := 0; i < len(reminders); i++ {
+		arrEventIDs = append(arrEventIDs, reminders[i].Event_ID)
+	}
+
+	var fEventFilter = bson.M{"_id": bson.M{"$in": arrEventIDs}}
+
+	eventColl := s.DB(dbname).C("events")
+	err := eventColl.Find(fEventFilter).Iter().All(&events)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	for key, value := range events {
+		fmt.Println(key, value)
+	}
+}
+
+// Return event participants for a given set of events
+func loadParticipantsForReminders(s *mgo.Session, reminders []Reminder) ([]EventParticipant, error) {
+	var participants = []EventParticipant{}
+	var arrEventIDs = []bson.ObjectId{}
+	for i := 0; i < len(reminders); i++ {
+		arrEventIDs = append(arrEventIDs, reminders[i].Event_ID)
+	}
+
+	var fParticipantsFilter = bson.M{"event_id": bson.M{"$in": arrEventIDs}}
+
+	participantColl := s.DB(dbname).C("event_participants")
+	err := participantColl.Find(fParticipantsFilter).Iter().All(&participants)
+
+	return participants, err
+}
+
+func readEmailTemplate(template_path string) string {
+	dat, err := ioutil.ReadFile(template_path)
+	return string(dat)
+}
+
+//
+// Makes a notification from the Event, Participant and Reminder objects
+//
+// Event URL: http://localhost:3000/organizations/5450e1a645726e1f00060000/events/560fd23345726ee84f450000/edit
+//
+//
+func makeNotification(e Event, r Reminder, p []EventParticipant) Notification {
+        var template = readEmailTemplate("resources/email-template.html")
+        var event_url =  
+	recipients := []string{}
+	for i := 0; i < len(p); i++ {
+		recipients = append(recipients, p[i].Email)
+	}
+	due_on := e.Starts_at.Format("Mon, Jan 2 2006 @ 03:04PM ")
+	description := fmt.Sprintf("You have an appointment or task due on %s.\n\nDescription:\n\n%s", due_on, e.Description)
+	subject := fmt.Sprintf("DOKKUMENTO REMINDER: %s", e.Title)
+	n := Notification{To: recipients, Subject: subject, Description: description, Starts_at: e.Starts_at, Location: e.Location}
+	return n
+}

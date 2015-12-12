@@ -1,0 +1,48 @@
+class CaseFolder
+  include Concurrent::Async
+
+  attr_accessor  :member_id, :org_id, :case_id, :folder, :connection_info
+
+  def initialize( attrs = {} )
+    init_mutex
+    @member_id = attrs[:member_id]
+    @org_id = attrs[:org_id]
+    @case_id = attrs[:case_id]
+    @folder = attrs[:folder]
+    @connection_info = attrs[:connection_info]
+  end
+
+  #
+  # Do not call this method directly. Instead, use #.async.get_remote_content
+  # Retrieves the content of the Dropbox folder aynchronously.
+  #
+  def get_remote_content
+   client = Dropbox::API::Client.new(:token => @connection_info[:token], :secret =>  @connection_info[:secret] )
+   @files = client.ls @folder
+  end
+
+  #
+  # Retrieves all case/folders for members who have activated dropbox integration
+  #
+  # IMPORTANT: Notice that it is possible that a combination of member/folder is
+  # invalid, meaning that the member does NOT have that folder in their Dropbox
+  # account. This scenario is possible when the organization has multiple members
+  # not all have matching folders in their dropbox account. Recall that only the
+  # administrator can associated folders with cases.
+  #
+  def self.all
+    _case_folders = Array.new
+    MongoConfig.database[:members].find(:dropbox_access_key => {"$exists" => true}).each do |m|
+     MongoConfig.database[:dropbox_case_folders].find(:organization_id => m["organization_id"]).each do |cf|
+       _case_folders << CaseFolder.new( :org_id    => cf["organization_id"],
+                                        :case_id   => cf["case_id"],
+                                        :folder    => cf["folder_name"],
+                                        :member_id => m["_id"],
+                                        :connection_info => { :token => m["dropbox_access_key"],
+                                                              :secret => m["dropbox_access_secret"] } )
+     end
+    end
+    _case_folders
+  end
+
+end

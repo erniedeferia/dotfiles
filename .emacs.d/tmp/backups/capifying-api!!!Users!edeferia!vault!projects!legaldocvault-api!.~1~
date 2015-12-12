@@ -1,0 +1,7 @@
+gem install capistrano
+(should install 3.4.0)
+
+$ cap install
+
+
+

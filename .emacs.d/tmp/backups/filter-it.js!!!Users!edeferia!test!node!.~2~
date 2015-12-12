@@ -1,0 +1,19 @@
+module.exports = function(folder, ext, processor) {
+
+ var fs = require('fs');
+ var path = require('path');
+
+ var filterExtVal = "." + ext;
+ var filtered = new Array();
+ var buf = fs.readdir(folder, function(err, list) {
+   if(err)
+    return processor(err);
+
+   for(var i=0; i<list.length; i++) {
+     if( path.extname(list[i]) === filterExtVal )
+      filtered.push( list[i] );
+   }
+   processor(null, filtered);
+ });
+
+};

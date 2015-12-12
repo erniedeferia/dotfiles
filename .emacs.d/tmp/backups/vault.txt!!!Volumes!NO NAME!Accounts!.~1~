@@ -1,0 +1,139 @@
+Arian to please organize and move down where they go
+
+Staging site as user so you see what is going to appear when done.  the add user system is not working until we get the roles finished so you have to access as if you are me. 
+lynn@cpabritt.com
+LuckyVault
+
+Lucid Charts - bad flowcharts and some screen shots  (Ernie you don’t really want go here yet as it will drive you crazy until I get organized) I’ll set up a folder for you in the lucid then you can go look at what I have done.
+lynn@cpabritt.com
+LuckyVault
+
+Git Lab:  Lynn’s access, dont’ know what I have permission for but here you go until arian gets you your own access:  I only click on the client items on the right and have been threatened my life to do anything other than issues.  lol 
+http://source.brittvault.com/users/sign_in
+lynn@cpabritt.com
+LuckyVault
+
+
+Pleadings Vault | Legal Doc Vault Credentials
+
+GitLab
+99 Designs
+Digital Ocean
+Mandrill
+Amazon S3
+Amazon S3 Access/API Keys
+NameCheap
+Newrelic
+Rackspace - Incorrect
+Rackspace - Incorrect
+Pleadings Vault
+Pleadings Vault WP Site
+Databases
+PleadingsVault
+LevaldocVault
+Notes
+GitLab
+GitLab is a web-based Git repository manager with wiki and issue tracking features.
+URL: http://source.brittvault.com
+User: carldanley@gmail.com
+Pass: k9bcuAebVpWkjVsLqkunkHwvcyv7sxiJ
+
+User: root
+Pass: khmfnfpeFcVAHKbHj6evHnxJJb8rjQrT
+99 Designs
+99designs is the world's leading design contest marketplace, powered by a massive community of designers and business owners. Small businesses and startups everywhere use our service to get graphic designs for logos, business cards, t-shirts, websites, and more.
+URL: http://99designs.com
+User: lynn@cpabritt.com
+Pass: LuckyVault
+Digital Ocean
+DigitalOcean is a simple cloud hosting provider built for developers. 
+URL: http://www.digitalocean.com
+User: colleen@cpabritt.com
+Pass: GLQyfJQD9XQzUmsX4HvwkGQjbuAUwo
+Mandrill
+Mandrill is designed to help applications or websites that need to send transactional email like password resets, order confirmations, and welcome messages.
+URL: https://mandrillapp.com/login/
+User: colleen@cpabritt.com
+Pass: pvault%5
+Amazon S3
+Amazon S3 (Simple Storage Service) is an online file storage web service offered by Amazon Web Services. Amazon S3 provides storage through web services interfaces (REST, SOAP, and BitTorrent).
+URL: https://www.amazon.com/ap/signin
+User: lynn@cpabritt.com
+Pass: Lucky1422
+Amazon S3 Access/API Keys
+Access Key ID: AKIAILXQIHRJHS2376IA
+Secret Access Key: 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
+NameCheap
+Used for Domain registration, WHOIS records, and SSL Certificates
+URL: https://www.namecheap.com/myaccount/login-signup.aspx
+User: LynnJanet
+Pass: LuckyVault
+Newrelic
+A software analytics tool suite used by developers, ops, and software companies to understand how your applications are performing in development 
+URL: http://newrelic.com
+User: support@pleadingsvault.com
+Pass: Ef7mZkdWYzYWcigfkyFo9WYpdzQVcYNq
+Rackspace
+URL: https://cp.rackspace.com/Login.aspx?ReturnUrl=%2f
+User: BrittVault
+Pass: LJCCsuccess!
+Rackspace - Incorrect
+URL: https://apps.rackspace.com/index.php
+User: lynn@cpabritt.com support@pleadingsvault.com
+Pass: LuckyVault  Luckyvault
+Pleadings Vault 
+URL: http://my.pleadingsvault.com
+User: carldanley@gmail.com
+Pass: vaultftw
+Pleadings Vault WP Site
+URL: http://pleadingsvault.com/wp-admin
+User: carldanley
+Pass: rsBYBPnTmPsErZJrZcXuKbkqKz6bvhuGjxKqDVyMUJexhfqVd8
+Databases
+PleadingsVault LIVE SITE DON’T MODIFY THIS
+ROOT ACCESS TO ALL DB’s
+User: root
+Pass: tJeyAKx9cgQeWpcgqYRXusVDqsc2aB
+
+DB: gitlab
+User: git
+Pass: fhTEmAZd3N4ALKXXpCTzWETqucEYJo
+
+DB: pleadingsvault
+User: product
+Pass: vtWRgkUDbEYxex6Mpf4UCoNunrJKJa
+
+DB: wordpress
+User: wordpress
+Pass: XeuYrN3gQLifk4HCtiVKrAuEDGVZWZGyJCGghhPiuCYgdKTjFC
+LevaldocVault
+ROOT ACCESS
+User: root
+Pass: CyNPOCvEUElWNwjStiQUPmp1opEZX3
+
+DB: legaldocvault (production)
+User: legaldocvault
+Pass: 7nKGXtJ1YtEicPiCmSnWkdcupHFDmQ
+
+DB: legaldocvault (development)
+User: legaldocvaultdev
+Pass: 1keVJ6RnsZyHAIoIEuAzyofhMV3AY4
+Notes
+GITLAB:
+
+Projects are prefixed with person that created them; you can transfer “namespaces” but that will cause confusion with having to change all of the server’s git repo’s as well. It’s better to keep my github account and just stick with it until you can find someone who can migrate the repo.
+
+SERVERS:
+
+You can find a list of the servers that are currently running by logging into digital ocean via the credentials listed above.
+If you wish to reset the password on a server and/or gain access to the server, you’ll need to reset the root password through digital ocean.
+
+TRANSITIONING PROCESS
+
+In order to transition from the old code to the new code, you’ll need to:
+Finish writing the permissions module and integrate it into each necessary route
+Get the new code fully tested and signed off by Lynn
+Move the documents in the existing amazon s3 folder to the new amazon s3 folder and match the current structure (found in the new code).
+Reroute the DNS from the pleadingsvault.com server to the legaldocvault.com server
+Voila!
+

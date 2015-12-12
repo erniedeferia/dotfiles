@@ -1,0 +1,250 @@
+require 'concurrent'
+# information about sandbox data here: https://www.braintreepayments.com/docs/ruby/reference/sandbox
+# IMPORTANT: Usse this link to initiate the process of sending email receipts when subscription
+# transactions are processed:
+# https://support.braintreepayments.com/customer/portal/articles/1080524-email-receipts#SPF
+#
+class NotAnAdminBraintreeError < StandardError
+end
+
+class PaymentProvider
+  include Concurrent::Async
+
+  def initialize
+    init_mutex # initialize the internal synchronization objects
+  end
+
+  #
+  # Queries Braintree for all existing credit cards for the
+  # identified customer (=organization id)
+  #
+  def list_credit_cards( org_id )
+    credit_cards = []
+    Rails.logger.info "SEARCHING FOR CUSTOMER: #{org_id}"
+    customer = Braintree::Customer.find(org_id)
+    if !!customer then
+      customer.credit_cards.each do |cc|
+        credit_cards << { :last_4 => cc.last_4,
+                          :expiration_date => cc.expiration_date,
+                          :image_url => cc.image_url,
+                          :cardholder_name => cc.cardholder_name,
+                          :is_default => cc.default? }
+      end
+    end
+    credit_cards
+  end
+
+  #
+  # Gets the credit card identified by the token
+  #
+  def get_credit_card(token)
+    cc = Braintree::CreditCard.find(token)
+   {:last_4 => cc.last_4, :expiration_date => cc.expiration_date, :is_default => cc.default?}
+  end
+
+  #
+  # Called from CreditCardInfoController#confirm with the confirmation information
+  # after a credit card is added. It will store the credit card token in the
+  # account model.
+  #
+  def confirm_payment_information(org_id, token)
+    a = Account.where(:organization_id => org_id).first
+    org = Organization.find(org_id)
+    org.account.update_attribute(:credit_card_token, token)
+  end
+
+  #
+  # Creates a customer in the BrainTree service. Throws exception if
+  # the process failed or the passed member is not in the amdin role.
+  #
+  # Parameters:
+  #  admin: member in the admin role.
+  #
+  def create_customer( admin )
+   Rails.logger.info "PaymentProvider.:create_customer - Creating a customer account for: [#{admin.organization.id}] #{admin.first_name} #{admin.last_name}"
+   if !admin.administrator? then
+       raise NotAnAdminBraintreeError.new( "Member:#{admin.first_name} #{admin.last_name}"\
+                                                                " is not in the admin role and somehow attempted"\
+                                                                " to create a paying customer account.")
+   end
+
+   result = Braintree::Customer.create(
+     :id => admin.organization.id,
+     :first_name => admin.first_name,
+     :last_name => admin.last_name)
+
+   if result.success? then
+     Rails.logger.info "PaymentProvider.:create_customer - Successfully created a customer for #{admin.organization.id}"
+
+     mail = SystemMailer.notify("New Customer", "Created a customer account on the Braintree service "\
+                                             " for member-admin: #{admin.organization.id}, [#{admin.first_name} #{admin.last_name}]")
+     mail.deliver
+
+     true
+   else
+     Rails.logger.info "PaymentProvider.:create_customer - Failed to create a customer for #{admin.organization.id}"
+     SystemMailer.new.notify("New Customer Failure", "Failed to create a new customer on Braintree "\
+                                                     " for member-admin: #{admin.organization.id},"\
+                                                     " [#{admin.first_name} #{admin.last_name}] with error: #{result.message}")
+     false
+   end
+  end
+
+  #
+  # Deletes the customer and all associated payment methods. All existing subscriptions
+  # are also cancelled.
+  #
+  def delete_customer( org_id )
+   customer_id = org_id.is_a?(Moped::BSON::ObjectId) ? org_id.to_s : org_id
+   begin
+    #
+    # remove the customer on Braintree
+    #
+    result = Braintree::Customer.delete(customer_id)
+    Rails.logger.info "BRAINTREE: Deleted customer #{org_id}"
+
+    #
+    #  Notify us via email
+    #
+    mail = SystemMailer.notify("Cancellation", "Customer #{org_id} has cancelled his subscription.")
+    mail.deliver
+
+   rescue => e
+    Rails.logger.info "BRAINTREE: Error while deleting customer: #{org_id}, Error: #{e.message}"
+   end
+  end
+
+  #
+  # Adds a suscription to the specified customer (org_id) for the plain_id using the payment_token.
+  #
+  # Reference: https://developers.braintreepayments.com/ios+ruby/sdk/server/recurring-billing/create
+  #
+  # Side effect:
+  #  1. Creates a subscription on Braintree, including add-on for each active member in addition
+  #     to the administrator (or main subscriber).
+  #  2. Updates the organization's account to active
+  #  3. Updates the subscription field of the account to the value returned from Braintree
+  #  4. Sends a confirmation email to the customer
+  #  5. If failure,
+  #    a. deactivates account
+  #    b. notifies system admin about failure
+  #    c. mails the account's admin with a notification of error.
+  #
+  def create_subscription(org_id, plan_id, payment_token, additional_members)
+   result = nil
+
+   if additional_members > 0 then
+     result = Braintree::Subscription.create(
+                                             :payment_method_token => payment_token,
+                                             :plan_id => plan_id,
+                                             :add_ons => {
+                                               :inherited_from_id => "#{plan_id}_additional_subscription",
+                                               :quantity => additional_members
+                                             },
+                                             :options => {
+                                               :start_immediately => true
+                                             })
+    else
+     result = Braintree::Subscription.create(
+                                             :payment_method_token => payment_token,
+                                             :plan_id => plan_id,
+                                             :options => {
+                                               :start_immediately => true
+                                             })
+
+    end
+
+   # If successful, update the organization's account with the subscription id.
+   org = Organization.find(org_id)
+   if result.success? then
+      org.activate_paid_subscription( result.subscription.id)
+      # result.subscription and result.subscription.transactions[0] are available.
+      SubscriptionNotificationMailer.new.activated(org.administrator, result.subscription)
+   else
+      org.deactivate
+      a = BraintreeAudit.from_subscription_error(result)
+      SystemMailer.new.notify("Subscription error", "Organization ID: #{org_id}, BraintreeAudit ID: #{a.id}, #{result.message}")
+      SubscriptionNotificationMailer.new.unable_to_activate(org.administrator, result.transaction.status)
+   end
+  end
+
+  #
+  # Cancel the subscription along with all the add-ons that represent all other users in the
+  # same organization.
+  #
+  def cancel_subscription( subscription_id )
+    result = Braintree::Subscription.cancel( subscription_id )
+  end
+
+  #
+  #  This method updates a subscription to have *subscribers_count* add-ons, each one
+  #  representing an additional active members in the organization (other than the
+  #  admin). This method is intended to be used any time a member is added or removed
+  #  from the organization after the subscription is active.
+  #
+  #  Notice that this method uses the replace_al_add_ons_and_discounts options,
+  #  which first removes all existing addons, thus it exhibits idempotent
+  #  behavior.
+  #
+  def set_subscription_members( subscription_id, subscribers_count, plan_id )
+    result = Braintree::Subscription.update(
+      subscription_id,
+      :options => {
+       :replace_all_add_ons_and_discounts => true
+      },
+      :add_ons => {
+        :add => {
+          :inherited_from_id => "#{plan_id}_additional_subscription",
+          :quantity => subscribers_count
+        }
+      })
+  end
+
+  #
+  # Updates the subscription (of a customer = org_id) to a new payment token.
+  # This should happen whenever the customer provides a new default credit card.
+  #
+  def update_subscription_payment_method(subscription_id, payment_token)
+
+  end
+
+  #
+  # Formats a string suitable for emailing a user to describe the
+  # reason why a subscription transaction failed.
+  #
+  # result = result.transaction
+  #
+  def self.format_subscription_failure( tran_res )
+   msg = ''
+   case tran_res.status
+   when 'processor_declined'
+     msg = "Unable to complete registration transaction due to: #{trans_res.processor_response_text}"
+   when 'gateway_rejected'
+     msg = "Unable to complete registration transaction due to: #{trans_res.gateway_rejection_reason}"
+   when 'failed'
+     msg = "We were unable to complete the transaction. We will try again and notify you of the outcome"
+   else
+     'Unable to determine the reason why the transaction failed. We will research and contact you via email.'
+   end
+  end
+
+  #
+  # Formats a string suitable for emailing to a user to describe the
+  # reason for a credit card verification failure.
+  #
+  # ver_res = result.credit_card_verification
+  #
+  def self.format_verification_failure( ver_res )
+   reason = ""
+   case ver_res.status
+   when 'processor_declined'
+     reason = "#{ver_res.status}/#{ver_res.processor_response_text} with code #{ver_res.processor_response_code}"
+   when 'gateway_rejected'
+     reason = "#{ver_res.status}/#{ver_res.gateway_rejection_reason}"
+   else
+     reason = "NONE"
+   end
+   "Sorry, but the credit card you provided was declined for the following reason: #{reason}"
+  end
+
+end

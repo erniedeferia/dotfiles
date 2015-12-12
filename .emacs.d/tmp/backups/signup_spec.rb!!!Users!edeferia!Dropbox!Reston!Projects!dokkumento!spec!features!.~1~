@@ -1,0 +1,38 @@
+require 'rails_helper'
+#require 'factories'
+require 'members_mailer'
+require 'email_spec'
+
+describe "sign up should direct users to dashboard", :type => :request do
+
+  before :each do
+    @admin = FactoryGirl.build(:user)
+    @admin.member.organization = FactoryGirl.build(:organization)
+  end
+
+  it "it should redirect to the dashboard page" do
+
+    delete destroy_user_session_path # visit signup_path
+    visit new_user_registration_path
+
+    fill_in 'user[email]', :with => @admin.email
+    fill_in 'user[password]', :with => @admin.password
+    fill_in 'user[password_confirmation]', :with => @admin.password
+
+    fill_in 'user[member_attributes][first_name]', :with => @admin.first_name
+    fill_in 'user[member_attributes][last_name]', :with => @admin.last_name
+    fill_in 'user[member_attributes][organization_attributes][name]', :with => @admin.member.organization.name
+
+    click_link_or_button 'Sign up'
+
+    # see method defined in members_mailer.rb
+    MembersMailer.last_email.to.should include(@admin.email)
+
+    # comes from gem 'email_spec'
+    click_first_link_in_email(MembersMailer.last_email)
+
+    expect(page).to have_link('Sign out', href: destroy_user_session_path)
+
+  end
+
+end

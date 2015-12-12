@@ -1,0 +1,36 @@
+const _ = require('lodash');
+
+module.exports = function(site, db) {
+  const Route = require('../../../utils/route')(site, db);
+
+  return new Route({
+    url: '/users/:userID(\\d+)/accounts',
+    method: 'get',
+
+    callback: function(req, res) {
+
+      if (!req.hasValidToken()) {
+        return res.status(401).json('Invalid vault token');
+      }
+
+      var loggedInUserID  = req.getCurrentUserID();
+      var requestedUserID = parseInt(req.params.userID, 10);
+
+      this.utils.permissions.ensureUserIsNotDisabled(userID)
+        .bind(this)
+        .then(_.partial(this.utils.permissions.getAccountsForUser, requestedUserID))
+        .then(function(accounts) {
+          res.status(200).json(account);
+        })
+        .catch(function(err) {
+          var error = this.getKnownError(err.message);
+          if (error) {
+            return res.status(error.code).json(error.message);
+          }
+
+          this.logError(err.stack);
+          res.status(500).end();
+        });
+    }
+  });
+};

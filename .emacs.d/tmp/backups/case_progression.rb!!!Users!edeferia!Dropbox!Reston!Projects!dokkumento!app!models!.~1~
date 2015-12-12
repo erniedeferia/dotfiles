@@ -1,0 +1,27 @@
+class CaseProgression
+  include PermanentRecord
+
+  f_string :initialization_state
+  f_string :associations_state
+
+  belongs_to :case
+
+  state_machine  :initial => :created do
+    after_transition  :do :save_state
+
+    event :add_client do
+      transition :created => :client_identified, :if => :has_no_attorney
+      transition :attorney_identified => :required_associations_defined, :if => :has_attorney
+    end
+
+    event :add_attorney do
+      transition :created => :c, :if => :has_no_attorney
+      transition :attorney_identified => :required_associations_defined, :if => :has_attorney
+    end
+  end
+
+  def save_state
+    initialization_state = self.state
+  end
+
+end

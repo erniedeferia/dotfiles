@@ -1,0 +1,89 @@
+(ns finaicore.core
+  (:require [clojure.core.matrix  :as cm]
+            [clojure.core.matrix.operators :as cmo])
+  (:use
+        (enclog nnets training)))
+
+(comment
+ "http://gigasquidsoftware.com/blog/2013/12/02/neural-networks-in-clojure-with-core-dot-matrix/"
+  )
+
+(def default-activation-fn
+ "Default activation function - sigmoid"
+  #(Math/tanh %))
+
+(def default-activation-derivative-fn
+ "Derivative of default activation function - sigmoid"
+  #(- 1.0 (* % %)))
+
+
+(defn -activate-layer
+  "Computes the output of a layer of neurons given their inputs, weights and activation
+   function. The input *weights* is a matrix of weights for the layer being activated.
+   These are the connection weight from the previous layer. Thix matrix is expected to
+   be composed as follows.
+
+   Given current layer has 3 neurons and previous has 2:
+   -----------------------------------------------------
+   [ [0.1 0.2 0.3]  weights from first neuron of prev layer to all neurons of current layer
+     [0.3 0.4 0.2]] weights from second neuron of prv layer to all neurons of current layer
+
+   Thus, the value of each neuron in the activation layer is defined as:
+
+   V(i) = Activation-Fn( Sum ( Wi * P(i) ) )
+
+   Where,
+     V(i) is the value of the ith neuron in the activated layer
+     Wi   is the ith weight coming into the activated neuron
+     P(i) is the value of the previous layer neuron associated with wi
+     Activation-Fn is the sigmoid or whatever activation function being used
+  "
+  [inputs weights]
+  (mapv default-activation-fn
+     (mapv #(reduce + %)
+         (cmo/* inputs (cm/transpose weights)))))
+
+
+(defn -generate-weights
+  "Generates random weights for all the connections created by combining
+   [to] and [from], where [t] represents the number of neurons in the
+   previous layer and [from] the number in the next."
+  [to from]
+  (let [l (* to from)]
+    (map vec (partition from (repeatedly l #(rand (/ 1 l)))))))
+
+
+(defn make-network
+  "Constructs a network given the counts for input hidden and output layers.
+   input  = a number identifying the number of input neurons in the input layer
+   hidden = a vector of two elements. the first identifies how many hidden layers,
+            while the second the number of neurons in each hidden layer.
+   output = a number identifying the number of output neurons in the output layer."
+  [inputs hidden outputs ]
+  (let [w (transient []) ;; weights matrix
+        v (transient []) ;; neuron outputs
+        ]
+    ;;------------------------------------------------------------------------------------
+    ;; for each neuron layer, create an initial value vector
+    ;;------------------------------------------------------------------------------------
+    (conj! v (vec (repeat inputs  1)))
+    (doall
+       (map #(conj! v %)  (repeatedly (first hidden) #(vec (repeat (second hidden) 0)) )  )
+      )
+    (conj! v (vec (repeat outputs 0)))
+    ;;------------------------------------------------------------------------------------
+
+    ;;------------------------------------------------------------------------------------
+    ;; for each hidden layer, create a weights matrix
+    ;;------------------------------------------------------------------------------------
+    (conj! w (vec (-generate-weights inputs (second hidden)) ) )
+    (doall
+      (map #(conj! w %)
+        (repeatedly (- (first hidden) 2) #(vec  (-generate-weights (second hidden) (second hidden)) )  )
+        ))
+    (conj! w (vec (-generate-weights (second hidden) outputs)) )
+    ;;------------------------------------------------------------------------------------
+
+    [(persistent! w)  (persistent! v)]
+    )
+  )

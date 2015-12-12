@@ -1,0 +1,13 @@
+(ns hello-world.api
+  (:require [clj-json.core :as json]))
+
+ (defn api-json-response-2 [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/json"}
+   :body (json/generate-string data)})
+
+
+  (defn api-produce-json-2
+  "This function produces a json response"
+  []
+  (api-json-response-2 {:id "0001" :value "This is your api secret key"} 200))

@@ -1,0 +1,12 @@
+class BraintreeService
+  #
+  # Creates a customer in the BrainTree service. Throws exception if
+  # the process failed or the passed member is not in the amdin role.
+  #
+  # Parameters:
+  #  admin: member in the admin role.
+  #
+  def create_customer( admin )
+
+  end
+end

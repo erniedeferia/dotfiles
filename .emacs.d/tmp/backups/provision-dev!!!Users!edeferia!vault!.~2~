@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# Get both projects, legaldocvault-client and legaldocvault-api
+# under a root folder. I named this folder 'vault'.
+
+# READ the README on the API and perform the couple of steps described there.
+#
+# MAKE SURE TO RUN `bower install` to get install all bower components.
+#
+
+# IMPORTANT: After copying config.example.js into config.js, modify the development
+# section as follows:
+#
+#     development: {
+#      database: {
+#        client: 'mysql',
+#        connection: {
+#          host: '127.0.0.1',
+#          user: 'vault',
+#          password: 'vault',
+#          database: 'vault_dev'
+#        },
+#        debug: false
+#      },
+#      directory: (__dirname + '/database/development/migrations/'),
+#      tableName: 'mysql-migrations'
+#    }
+#
+#
+
+
+#
+# If brew is out of date, uncomment these lines or just
+# execute them on the shell.
+#
+# brew update
+# brew doctor
+# brew upgrade
+#
+
+brew install mysql
+
+ mysql_install_db --verbose --user=`whoami` --basedir="$(brew --prefix mysql)" --datadir=/usr/local/var/mysql --tmpdir=/tmp
+
+
+# Starts off the MySQL server in the
+mysql.server restart
+
+#
+# WARNING: MUST DO THIS PRIOR TO RUNNING THE GULP INSTALL-DEV COMMAND
+# From mysql shell, create database
+#  mysql> CREATE DATABASE vault_dev;
+#  (exit)
+#  mysql --user=root mysql
+#  mysql> CREATE USER 'vault'@'localhost' IDENTIFIED BY 'vault';
+#  mysql> GRANT ALL PRIVILEGES ON *.* TO 'vault'@'localhost';
+
+#
+# Use gulp install-dev task to create necessary tables
+#
+cd legaldocvault-api
+gulp install-dev
+cd ..
+
+
+# Creating SSH key to configure Git shell access
+ cd ~/.ssh
+ ssh-keygen -t rsa -C "ernie.deferia@tibercreek.com"
+
+ Enter name: id_rsa_tiber
+ Enter passphrase: PLM?wsx098
+
+# Edit the ~/.ssh/config file to configure multiple GIT keys
+# Added this host:
+Host source.brittvault.com
+  RSAAuthentication yes
+  IdentityFile ~/.ssh/id_rsa_tiber
+  User ernie.deferia@tibercreek.com
+
+# Added the SSH key to GitLab
+> pbcopy < ~/.ssh/id_rsa_tiber.pub
+# Then pasted it in the SSH Keys tab of GitLab
+
+# Created new directory structure:
+> mkdir  ~/vault/projects && cd ~/vault/projects
+
+# Then issue the following Git clone command:
+> git clone git@source.brittvault.com:carldanley/legaldocvault-client.git
+> git clone git@source.brittvault.com:carldanley/legaldocvault-api.git

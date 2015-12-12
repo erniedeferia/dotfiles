@@ -1,0 +1,19 @@
+(ns finaicore.core
+ (:use (incanter core stats))
+ )
+
+(defn risk-simple
+  [prices]
+   (variance prices)
+  )
+
+
+(defn expected-returns-simple
+  "Returns a very simple measure of expected returns, just the
+   historical average. The month over month return is defined as
+   (p1 - p0)/p1 or p1/p2 - 1. The partition form takes two elements
+   from the sequence in steps of 1, this gives us the moving window
+   needed to compute the month over month retruns."
+  [prices]
+  (/ (reduce + (map #(- (/ (nth % 1) (nth % 0)) 1)  (partition 2 1 prices)) ) (count prices))
+  )

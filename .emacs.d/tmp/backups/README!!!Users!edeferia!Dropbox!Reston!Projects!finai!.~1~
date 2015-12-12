@@ -1,0 +1,8 @@
+=== ] Obtaining the data
+
+1. Created an account on eoddata.com and downloaded the list of funds from:
+  http://www.eoddata.com/stocklist/USMF/F.htm
+  (to a file named USMF.txt)
+
+2. Ran the following awk command to create a file containing only Fidelity funds
+  $  awk '/Fidelity/ { print $0 }' USMF.txt > fidelity_funds.txt

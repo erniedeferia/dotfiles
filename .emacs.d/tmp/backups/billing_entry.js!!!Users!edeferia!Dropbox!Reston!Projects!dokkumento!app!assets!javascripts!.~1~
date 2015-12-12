@@ -1,0 +1,16 @@
+function BillingEntry() {
+ var self = this;
+ self.date = ko.observable(new Date().toLocaleDateString());
+ self.description = ko.observable("");
+ self.case_number = ko.observable("");
+ self.time_units = ko.observable("");
+ self.rate = ko.observable("");
+ self.amount = ko.observable("");
+}
+
+
+$(document).ready( function() {
+ if( $activeModule == "billing_entries" ) {
+
+ }
+});

@@ -1,0 +1,36 @@
+(ns nlp.time.core
+  "Core date-time related vars and functions."
+  (:require
+   [clojure.string :refer [join] :as cljstr]
+   [clj-time.core :as t :only [plus months weeks]]
+   [clj-time.format :as ttf :only [formatter unparse]]
+   [clj-time.local :as l :only [local-now]]))
+
+
+(def date-nouns ["today"
+                 "tomorrow"
+                 "monday"
+                 "tuesday"
+                 "wednesday"
+                 "thursday"
+                 "friday"
+                 "saturday"
+                 "sunday"] )
+
+
+
+(def standard-date-formatter (ttf/formatter
+                              "MMMM d yyyy"
+                              (tt/default-time-zone)))
+
+(def standard-datetime-formatter (ttf/formatter
+                                  "MMMM d yyyy 'at' h:mm a"
+                                  (tt/default-time-zone)))
+
+
+(defn date-from-date-noun
+  "Converts one of the date nounts (e.g., tomorrow) into the proper
+   date object, using local time."
+  [noun]
+
+  )

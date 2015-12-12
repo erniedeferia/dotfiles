@@ -1,0 +1,24 @@
+(ns booketariand.core
+  (:use [clojure.java.shell :only [sh]]) )
+
+(def PDF_META_MATCHER {:author #"(?m)^Author:\s+([^\n]+)"
+                       :date #"(?m)^CreationDate:\s+([^\n]+)"
+                       :creator #"(?m)^Creator:\s+([^\n]+)"
+                       :keywords #"(?m)^Keywords:\s+([^\n]+)"
+                       :producer #"(?m)^Producer:\s+([^\n]+)"
+                       :subject #"(?m)^Subject:\s+([^\n]+)"
+                       :title #"(?m)^Title:\s+([^\n]+)"
+                       :length #"(?m)^Pages:\s+([^\n]+)"
+                      })
+
+(defn extract_all
+  [pdfs, opts]
+  (let [cmd "/usr/local/bin/pdfinfo"
+        pdf_meta (:out (sh cmd (first pdfs)))
+        ]
+
+    (map 
+        #(assoc  nil (nth % 0)  (nth (re-find (nth % 1) pdf_meta) 1 ) )
+        PDF_META_MATCHER )
+    )
+  )

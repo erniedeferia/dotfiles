@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Copy web server provisioning script
+sudo scp -o "StrictHostKeyChecking no" -P 2222 ~/Dropbox/Reston/Projects/dokkumento/scripts/ec2_provisioning/provision_ec2_web_server vagrant@localhost:.

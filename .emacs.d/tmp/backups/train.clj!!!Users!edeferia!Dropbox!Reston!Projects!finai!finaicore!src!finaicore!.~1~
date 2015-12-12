@@ -1,0 +1,37 @@
+(ns finaicore.core
+  (:require [clojure.core.matrix  :as cm]
+            [clojure.core.matrix.operators :as cmo])
+  (:use
+        (enclog nnets training)))
+
+
+(defn -output-layer-error
+  "Computes the gradient descent deltas between a layer's output and the expected
+   results (targets).
+   Note that these are vector operations."
+  [targets outputs]
+  (cmo/* (mapv default-activation-fn outputs)
+      (cmo/- targets outputs)))
+
+(defn -hidden-layer-error
+  "Computes the errors of any hidden layer given the errors of the next layer
+   (next-error).
+   Parameters:
+   next-errors = errors of the next layer
+   neurons     = activation value of the current neuron layer
+   weights     = weights associated with the current layer, which are the
+                 weights leading into it from the previous layer."
+  [next-errors neurons weights]
+  (* (mapv default-activation-fn neurons)
+     (mapv #(reduce + %)
+       (cmo/* next-errors weights))))
+
+
+(defn -update-weights
+  "Update weights of a layer given the errors, current neuron activation values
+   current weights and the learning rate. In generatel the learning rule is as
+   follows:
+   New-Weight = Current-Weight + (Learning-Rate * (Error*Neuron-Value))"
+  [errors neurons weights lrate]
+  (+ weights (* lrate
+               (mapv #(* errors %) neurons))))

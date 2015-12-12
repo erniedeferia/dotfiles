@@ -1,0 +1,106 @@
+-- Create AA01 user
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'aa01-carl@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'AA01_CARL'
+, 'CARL'
+, 'Britt CPA'
+,  'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add AA01 account association
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 2, unix_timestamp(), 3);
+
+-- Create AA02 User
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'aa02@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'AA02'
+, 'Britt'
+, 'Britt CPA'
+,  'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add AA02 account associations
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 2, unix_timestamp(), 3);
+
+-- Create AA03 User
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'aa03@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'AA03'
+, 'Britt'
+, 'Britt CPA'
+,  'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add AA03 account associations
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 2, unix_timestamp(), 3);
+
+
+
+-- Create IU01
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'iu01@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'IU01'
+, 'Britt'
+, 'Britt CPA'
+, 'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add IU01 account association
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 3, unix_timestamp(), 3);
+
+
+
+-- Create IU02
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'iu02@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'IU02'
+, 'Britt'
+, 'Britt CPA'
+, 'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add IU02 account association
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 3, unix_timestamp(), 3);
+
+
+-- Create IU03
+insert into users
+(username, password, enabled, subscribed, firstName, lastName, companyName, referredBy, invitedBy, createdAt)
+select 'iu03@gmail.com'
+,'48303341d18883207266339dc518565b'
+, 1
+, 0
+, 'IU03'
+, 'Britt'
+, 'Britt CPA'
+, 'Lynn Britt'
+, 3
+, unix_timestamp();
+-- Add IU03 account association
+insert into accountUsers (userID, accountID, accountRoleID, createdAt, createdBy)
+values( last_insert_id(), 3, 3, unix_timestamp(), 3);

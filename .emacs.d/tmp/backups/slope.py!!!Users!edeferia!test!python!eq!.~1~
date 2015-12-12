@@ -1,0 +1,13 @@
+point_a_x = 0.0
+point_a_y = 0.0
+point_b_x = 0.0
+point_b_y = 0.0
+
+point_a_x = raw_input("Please enter the X value of the first point: ")
+point_a_y = raw_input("Please enter the Y value of the first point: ")
+point_b_x = raw_input("Please enter the X value of the second point: ")
+point_b_y = raw_input("Please enter the Y value of the second point: ")
+
+slope = ( float(point_a_y) - float(point_b_y) ) / ( float(point_a_x) - float(point_b_x) )
+
+print 'The slope is ' + str(slope)

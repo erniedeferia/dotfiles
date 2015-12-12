@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+        echo "Error: please specify environment [staging|production] to the provision script"
+        exit 1
+fi
+
+DEPLOYMENT_ENV=$1
+
+if [ [ "$1" == "development" ] -o [ "#1" == "dev" ] ]; then
+  rails c
+fi
+
+bundle exec rails console %1

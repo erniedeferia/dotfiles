@@ -1,0 +1,9 @@
+def showOff() {
+  println("I am showing off")
+}
+
+object Hellow {
+  def main( args : Array[String] ) {
+     showOff()
+  }
+}

@@ -1,0 +1,12 @@
+var filterit = require('./filter-it');
+
+filterit(process.argv[2], process.argv[3], function(err, data) {
+  if(err) {
+    console.log(err);
+    return;
+  }
+
+  data.forEach( function(f) {
+    console.log(f);
+  });
+});

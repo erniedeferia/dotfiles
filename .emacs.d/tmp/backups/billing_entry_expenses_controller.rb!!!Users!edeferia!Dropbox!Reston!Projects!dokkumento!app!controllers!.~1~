@@ -1,0 +1,14 @@
+class BillingEntryExpensesController < AlexandriaCloudController
+  defaults :resource_class => BillingEntryTime
+
+  def build_resource_params
+    [params.permit( :_type,
+                    :amount,
+                    :description,
+                    :billing_date,
+                    :case_id,
+                    :organization_id,
+                    :member_id)]
+  end
+
+end

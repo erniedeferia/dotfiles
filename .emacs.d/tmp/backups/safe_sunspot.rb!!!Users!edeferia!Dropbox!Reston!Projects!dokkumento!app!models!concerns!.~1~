@@ -1,0 +1,12 @@
+module SafeSunspot
+ extend ActiveSupport::Concern
+
+ included do
+   alias_method_chain :search :safety
+ end
+
+ def self.search_with_safety
+
+ end
+
+end

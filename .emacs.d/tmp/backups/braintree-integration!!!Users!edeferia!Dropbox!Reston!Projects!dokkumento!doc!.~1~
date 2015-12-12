@@ -1,0 +1,3 @@
+1. Signed up for Sandbox (has to repeat for production)
+2. Stored merchat_id, public_key, and private_key in secrets.yml
+3. Added the 3 braintree settings to the application.yml

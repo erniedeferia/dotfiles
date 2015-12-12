@@ -1,0 +1,9 @@
+(ns finaicore.core
+  (:use (incanter core stats)))
+
+
+(comment
+  "This class leverages the implementation of a Recurrent Neural Network from
+   the Encog library.
+   https://github.com/encog/encog-java-core/"
+  )

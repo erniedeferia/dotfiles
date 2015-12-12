@@ -1,0 +1,1 @@
+mysqldump -u root -p legaldocvault-dev > ./legaldocvault-dev.sql

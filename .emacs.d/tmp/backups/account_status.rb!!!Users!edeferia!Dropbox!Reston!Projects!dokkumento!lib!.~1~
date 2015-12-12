@@ -1,0 +1,74 @@
+module AccountStatus
+
+  def self.included(base)
+    attr_reader :state_change
+
+    base.class_eval do
+
+      before_save :sync_account_active
+
+      state_machine :state, :initial => :invited do
+
+        state :invited
+        state :active
+        state :inactive
+
+        after_transition :on => :invite_again, :do => :send_invite_email
+
+        event :invite_again do
+          transition [:inactive, :invited] => :invited
+        end
+
+        event :activate do
+          transition [:invited, :inactive] => :active, :if => lambda {|member| member.confirmed?}
+          transition [:inactive] => :invited
+        end
+
+        event :deactivate do
+          transition [:active, :invited] => :inactive
+        end
+      end
+    end
+  end
+
+  def state_change=(val)
+    res = send(val, false) rescue nil
+    @_state_change = res && val
+  end
+  alias :fire_event :state_change=
+
+  def state_label
+    case state
+    when 'invited' then ['invited', 'warning']
+    when 'active' then ['active', 'success']
+    else ['inactive', '']
+    end
+  end
+
+  def valid_transitions
+    case state
+    when 'invited' then [['invite_again', 'invite again'], ['deactivate']]
+    when 'active'  then [['deactivate']]
+    else
+      if confirmed_at
+        [['activate']]
+      else
+        [['activate'], ['invite_again', 'activate and invite again']]
+      end
+    end
+  end
+
+  private
+
+  def sync_user_active
+    return true unless state_changed?
+    return true unless user
+    if inactive?
+      user.active = false
+    else
+      user.active = true
+    end
+    true
+  end
+
+end

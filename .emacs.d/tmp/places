@@ -1,0 +1,10 @@
+;;; -*- coding: utf-8 -*-
+(("/Users/edeferia/dotfiles/"
+  (dired-filename . "/Users/edeferia/dotfiles/.emacs"))
+ ("/Users/edeferia/dotfiles/.emacs" . 143)
+ ("/Users/edeferia/dotfiles/.emacs.d/"
+  (dired-filename . "/Users/edeferia/dotfiles/.emacs.d/init.el"))
+ ("/Users/edeferia/dotfiles/.emacs.d/init.el" . 8609)
+ ("/Users/edeferia/dotfiles/lein" . 22)
+ ("/Users/edeferia/.bash_history" . 6186)
+ ("/Users/edeferia/.bash_profile" . 833))

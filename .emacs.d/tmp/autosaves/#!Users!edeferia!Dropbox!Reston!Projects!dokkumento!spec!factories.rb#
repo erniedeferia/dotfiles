@@ -1,0 +1,56 @@
+FactoryGirl.define do
+
+  factory :document do
+     title "Factory-ized document"
+     file { FactoryGirl.build(:file) }
+  end
+
+  factory :file do
+    file {  fixture_file_upload( Rails.root + 'spec/fixtures/files/testfile.pdf', "application/pdf") }
+  end
+
+  factory :member do
+    first_name "IAm"
+    last_name   "Tester"
+
+    #organization { FactoryGirl.build(:organization) }
+  end
+
+  factory :organization do
+     name "Testers United"
+     #members { [FactoryGirl.build(:member)] }
+  end
+
+  factory :user do
+    email         "iamadmin111@test.org"
+    password      "password"
+    member { FactoryGirl.build(:member) }
+  end
+
+  factory :sysadmin, class: User  do
+     User.find_by( :email => Settings.sysadmin_email )
+    #o.password = Settings.sysadmin_pwd
+    #o
+  end
+
+  factory :confirmed_user, :parent => :user do
+    after(:create) do |user|
+      user.confirm!
+    end
+  end
+
+  factory :case do
+    title        "An automated case"
+    summary      "Summary of automated case"
+    case_number  "00001-AUTOMATED"
+  end
+
+  factory :site_document do
+    title       "This is a site document"
+    description  "The description of the site document"
+    type        SiteDocument.type_values[:guide]
+    purpose     "EmailIntegration"
+    file        File.open "#{Rails.root}/spec/fixtures/files/testfile.pdf"
+  end
+
+end

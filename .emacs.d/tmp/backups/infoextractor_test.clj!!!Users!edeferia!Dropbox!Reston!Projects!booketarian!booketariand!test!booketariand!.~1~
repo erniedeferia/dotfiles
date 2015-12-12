@@ -1,0 +1,8 @@
+(ns booketariand.core-test
+  (:require [clojure.test :refer :all]
+            [booketariand.core :refer :all]))
+
+(deftest
+  (testing "booketariand.core/extract_all"
+   (sh "pwd")
+    ))

@@ -1,0 +1,64 @@
+$(document).ready( function() {
+
+  var be = modulejs.require('billing_entry_module');
+
+ if( alexandria_cloud.shouldExecuteModuleFn("billing_entries") ) {
+
+     ko.validation.rules.pattern.message = 'Invalid.';
+
+     ko.validation.init({
+         registerExtenders: true,
+         messagesOnModified: true,
+         insertMessages: true,
+         decorateElement: true,
+         errorElementClass: 'error',
+         errorMessageClass: 'help-inline',
+         grouping : { deep: true, observable: true }
+     },
+     false);
+
+     ko.bindingHandlers.numeric = {
+         init: function (element, valueAccessor) {
+             $(element).on("keydown", function (event) {
+                 // Allow: backspace, delete, tab, escape, and enter
+                 if (event.keyCode == 46 || event.keyCode == 8 ||
+                     event.keyCode == 9 || event.keyCode == 27 ||
+                     event.keyCode == 13 ||
+                     // Allow: Ctrl+A
+                     (event.keyCode == 65 && event.ctrlKey === true) ||
+                     // Allow: . ,
+                     (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
+                     // Allow: home, end, left, right
+                     (event.keyCode >= 35 && event.keyCode <= 39)) {
+                     // let it happen, don't do anything
+                     return;
+                 }
+                 else {
+                     // Ensure that it is a number and stop the keypress
+                     if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)
+                        && (event.keyCode < 96 || event.keyCode > 105)) {
+                         event.preventDefault();
+                     }
+                 }
+             });
+         }
+     };
+
+    if( typeof $organizationID !== 'undefined' && $organizationID &&
+        typeof $billingMemberRate !== 'undefined' && $billingMemberRate ) {
+        var active_entry = (typeof $billingEntry === 'undefined') ? (null) : ($billingEntry);
+console.log("active_entry: %o", active_entry);
+        var vm = (active_entry == null ? (new be.billingEntryViewModel()) : (new be.billingEntryViewModel($.parseJSON(active_entry))));
+
+      $.getJSON("/organizations/" + $organizationID + "/billing_member_rates/" + $billingMemberRate + ".json")
+            .done( function(data) {
+
+                vm.billing_entry().rate( parseFloat(data.rate).toFixed(2) );
+                ko.applyBindings(vm);
+             })
+             .done( function() {
+               setTimeout(function() { vm.recentEntries(); }, 2000);
+            });
+    }
+ } // END OF MODULE IF STATEMENT
+});

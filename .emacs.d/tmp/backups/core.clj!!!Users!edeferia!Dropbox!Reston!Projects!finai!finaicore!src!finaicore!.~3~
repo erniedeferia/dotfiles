@@ -1,0 +1,13 @@
+(ns finaicore.core
+  (:gen-class)
+  (:use (incanter core stats charts))
+  (require [clojure.data.csv :as csv]
+           [clojure.java.io :as io])
+  )
+
+(load "stats")
+(load "fin")
+(load "data")
+
+(defn -main [& args]
+    (view (histogram (sample-normal 1000))))

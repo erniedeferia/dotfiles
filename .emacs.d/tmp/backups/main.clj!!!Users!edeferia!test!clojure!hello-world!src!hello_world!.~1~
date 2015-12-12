@@ -1,0 +1,7 @@
+(ns hello-world.core
+  (:use ring.middleware.reload)
+  (:use ring.adapter.jetty))
+
+
+(defn boot []
+  (run-jetty (wrap-reload #'handler '(hello-world.handler.app)) {:port 8080}))

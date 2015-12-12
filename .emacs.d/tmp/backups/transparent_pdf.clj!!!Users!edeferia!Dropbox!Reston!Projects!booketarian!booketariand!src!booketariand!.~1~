@@ -1,0 +1,21 @@
+(ns booketariand.core
+  (:use [clojure.java.shell :only [sh]]
+        [me.raynes/fs "1.4.4"]
+        ) )
+
+
+(defn ensure_pdfs
+  "Temporarily converts the files identified by the paths contains in the 'docs'
+  sequence to PDF for further extraction of text, images or metdata. It returns
+  the path to the PDF documents. If the any of the original PDF, then their
+  path is returned. The files transformed to PDF are stored in a temporary
+  directory."
+  [docs]
+
+  )
+
+
+(defn -extract_pdf
+  [doc, output-dir]
+
+  )

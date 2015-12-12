@@ -1,0 +1,2 @@
+# Reports top level directory sizes in linux
+sudo du -sh /*

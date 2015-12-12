@@ -1,0 +1,16 @@
+class SystemMailer < ActionMailer::Base
+
+  def notify(event, message)
+    @member = member
+    mail(
+      :to       => member.email,
+      :from     => "support@dokkumento.com",
+      :subject  => "You have been invited",
+    )
+  end
+
+  def self.last_email
+    ActionMailer::Base.deliveries.last
+  end
+
+end

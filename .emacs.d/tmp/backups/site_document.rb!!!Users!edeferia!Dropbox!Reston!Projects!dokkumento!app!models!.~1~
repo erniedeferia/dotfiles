@@ -1,0 +1,9 @@
+class SiteDocument
+ include CoreModel
+
+ TYPE = {:guide => "Guide", :nformational => "Informational"}
+
+ f_string :title
+ f_string :description
+ f_string :type, :default =>
+end

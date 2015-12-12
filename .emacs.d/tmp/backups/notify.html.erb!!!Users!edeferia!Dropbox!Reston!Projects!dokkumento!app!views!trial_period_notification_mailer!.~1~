@@ -1,0 +1,2 @@
+"Hello #{@member.first_name} #{@member.last_name}", \n"
+Your Free Trial period for Dokkumento expires on #{}

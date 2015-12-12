@@ -1,0 +1,8 @@
+(ns nlp.training-test
+  "Tests the calendar event Duration model creation tool."
+  (:require [clojure.test :refer :all]
+            [nlp.training :refer :all]))
+
+(deftest create-model-test
+  (testing "FIXME, I fail."
+    (is (= 0 1))))

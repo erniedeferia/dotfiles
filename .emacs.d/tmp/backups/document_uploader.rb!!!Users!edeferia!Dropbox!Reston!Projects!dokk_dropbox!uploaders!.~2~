@@ -1,0 +1,113 @@
+# encoding: utf-8
+
+class DocumentUploader < CarrierWave::Uploader::Base
+
+  after :store, :process_file
+
+  # Include RMagick or MiniMagick support:
+  # include CarrierWave::RMagick
+  # include CarrierWave::MiniMagick
+
+  # Include the Sprockets helpers for Rails 3.1+ asset pipeline compatibility:
+  # include Sprockets::Helpers::RailsHelper
+  # include Sprockets::Helpers::IsolatedHelper
+
+  #  Choose what kind of storage to use for this uploader:
+  if Rails.env == 'development' then
+    storage :file
+  else
+    storage :fog
+  end
+
+  #storage :grid_fs
+
+
+  # Override the directory where uploaded files will be stored.
+  # This is a sensible default for uploaders that are meant to be mounted:
+  # This prefixes the string "original/" to the name of the file stored
+  # in grid FS. The filename gridfs property becomes original/{filname},
+  # where {filename} is defiend below by the function filename.
+  def store_dir
+    #  "uploads/#{model.class.to_s.underscore}/#{mounted_as}/#{model.id}"
+    "original"
+  end
+
+  # Provide a default URL as a default if there hasn't been a file uploaded:
+  # def default_url
+  #   # For Rails 3.1+ asset pipeline compatibility:
+  #   # asset_path("fallback/" + [version_name, "default.png"].compact.join('_'))
+  #
+  #   "/images/fallback/" + [version_name, "default.png"].compact.join('_')
+  # end
+
+  # Process files as they are uploaded:
+  # process :scale => [200, 300]
+  #
+  # def scale(width, height)
+  #   # do something
+  # end
+
+  # Create different versions of your uploaded files:
+  # version :thumb do
+  #   process :scale => [50, 50]
+  # end
+
+  # Add a white list of extensions which are allowed to be uploaded.
+  # For images you might use something like this:
+  def extension_white_list
+     %w(pdf tif docx xlsx txt)
+  end
+
+  # Override the filename of the uploaded files:
+  # Avoid using model.id or version_name here, see uploader/store.rb for details.
+  # With this format, and in combination with store_dir, the filename value will
+  # have the format 'original/{:modelid}/{orginal_filename}'.
+  #
+  # WARNING: The following note is incorrect, but I will leave it in to clarify
+  # the subject. When files are uploaded with support by carrierwave-mongoid
+  # they are stored in GridFS with a format of original/{:doc_id}_sanitizedname.ext.
+  # That sanitized name exclude dangerous characters. The result is that the
+  # filename attribute in GridFS is the above-described format. The note below
+  # was written in response to what I perceived to be a problem with this file
+  # name. However, the problem is in the name (really path) of each image
+  # as store on disk (assets_store) and in the documents images_path array.
+  # These paths are included in the request to /documents/{:id}/pages/{full_path}.
+  # If {full_path} includes characters that could cause the routing engine
+  # to confuse it as different route request then we have a failure. This is the
+  # case when the original file name include extraneous periods "." in the
+  # middle of the name.
+  #
+  # This problem was solved by altering the definition of the
+  # document_utils#workingdir_forfile method to remove ".".
+  #
+  # READ ABOVE FIRST!!!
+  # Note: at this point, the carrierwave-mongoid gem has sanitized the file
+  # name, but it doesn't remove any periods "." in the name (not the extension).
+  # Although this is not usually a problem, it causes an invalid route because
+  # period will be interpreted as the delimeter for a format specifier, or so
+  # I think. Hence, we are removing periods other than the extension.
+  #
+  def filename
+    "#{model.id}_#{original_filename}" if original_filename
+  end
+
+  def pretty_filename
+    "#{model.id}_#{original_filename}" if original_filename
+  end
+
+  def process_file(file)
+    processor = ProcessFileUpload.new
+
+    is_secure = model.case.is_secure?
+
+    # If the document's case is secure, then process_secure
+    # Else, if the document is a PDF do the usual processing
+    # model.id is the id of the associated Document object.
+    if is_secure then
+      processor.process_secure model
+    elsif File.extname(filename).sub('.','').downcase == 'pdf'
+      processor.process model,  :split => true, :ocr => true, :delete_original => true
+    end
+  end
+
+end

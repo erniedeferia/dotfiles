@@ -1,0 +1,8 @@
+(ns finaicore.core
+ (:use (incanter core stats))
+ )
+
+(defn fi-log-returns
+  [prices]
+  (fi-log prices)
+  )

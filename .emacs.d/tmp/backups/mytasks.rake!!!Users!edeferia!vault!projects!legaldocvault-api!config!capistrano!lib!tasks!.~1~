@@ -1,0 +1,27 @@
+namespace :predeploy do
+  desc "Stop all forever processes"
+  task :stop_web_app do
+    # run "forever stopall"
+    run "touch #{current_path}/stoppingall"
+  end
+end
+
+namespace :postdeploy do
+  desc "Start the application (API) forever instance"
+  task :start_web_app do
+    # run "cd #{current_path} && forever start index"
+    console "touch #{current_path}/starting_web_app"
+  end
+
+  desc "Start the Client application forever instance"
+  task :start_client_app do
+    # run "cd #{current_path} && forever start index"
+    console "touch #{client_application_path}/staring_client"
+  end
+  desc "Restart Forever"
+  task :restart_web_app do
+    stop_web_app
+    sleep 5
+    start_web_app
+  end
+end

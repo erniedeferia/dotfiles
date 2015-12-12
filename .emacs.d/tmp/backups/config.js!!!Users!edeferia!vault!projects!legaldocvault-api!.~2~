@@ -1,0 +1,58 @@
+module.exports = {
+  encryption: {
+    production: {
+      secretKey: '',
+    },
+    development: {
+      secretKey: 'EA886A45CF1ABF7DB31F4C5E49EDD',
+    }
+  },
+  server: {
+    port: 3000,
+    urlPrefix: '/api/v1',
+    sessionSecret: '',
+    nodeEnv: process.env.NODE_ENV
+  },
+  mandrill: {
+    apiKey: '',
+    fromEmail: 'noreply@pleadingsvault.com',
+    fromName: ''
+  },
+  s3: {
+    accessKeyId: 'AKIAJ7VTHYSHWOPZXUKA',
+    secretAccessKey: '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',
+    encryptionKey: '',
+    storageBucket: 'legaldocvault-staging-pleadings',
+    region: ''
+  },
+  mysql: {
+    production: {
+      database: {
+        client: 'mysql',
+        connection: {
+          host: '127.0.0.1',
+          user: '',
+          password: '',
+          database: 'vault'
+        },
+        debug: false
+      },
+      directory: (__dirname + '/database/production/migrations/'),
+      tableName: 'mysql-migrations'
+    },
+    development: {
+      database: {
+        client: 'mysql',
+        connection: {
+          host: '127.0.0.1',
+          user: 'root',
+          password: 'QWE?plm00',
+          database: 'staging'
+        },
+        debug: true
+      },
+      directory: (__dirname + '/database/development/migrations/'),
+      tableName: 'mysql-migrations'
+    }
+  }
+};

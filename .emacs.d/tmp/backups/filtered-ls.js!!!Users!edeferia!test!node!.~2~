@@ -1,0 +1,22 @@
+var fs = require("fs");
+var path = require('path');
+
+var lineCount = 0;
+
+var filterExtVal = process.argv[3];
+
+var buf = fs.readdir( process.argv[2], function(err, list) {
+  console.log("starting...");
+  if( !err ) {
+   console.log("no error");
+   console.log("list length: %o", list.length);
+    for(var i=0; i<list.length; i++) {
+     console.log( list[i] );
+     console.log( path.extname( list[i] ) );
+     if( path.extname(list[i]) == filterExtVal )
+       console.log(list[i]);
+   }
+  }
+  else
+   console.log(err);
+});

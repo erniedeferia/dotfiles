@@ -1,0 +1,14 @@
+require 'spec_helper'
+
+describe SiteDocument do
+ it "is valid with type and title, description, type, and attached file" do
+   d = Sitedocument.new
+   d.name = "Test Help Guide"
+   d.description =  "This is a site document that serves as a guide for testing purposes"
+   d.type = "Guide"
+   expect(template).to be_valid
+ end
+ it "is invalid without name"
+ it "is valid without description"
+ it "is invalid without a type"
+end
