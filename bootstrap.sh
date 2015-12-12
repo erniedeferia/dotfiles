@@ -1,5 +1,17 @@
 ########## Variables
 
+
+#
+# Modify this run only if the following directories DON'T exist:
+#
+# ~/.emacs-live.el
+# ~/.live-packs
+#
+# Source: http://overtone.github.io/emacs-live/
+if [[ ! -d ~/.emacs-live.el && ! -d ~/.live-packs ]]; then
+  bash <(curl -fksSL https://raw.github.com/overtone/emacs-live/master/installer/install-emacs-live.sh)
+fi
+
 dir=~/dotfiles                    # dotfiles directory
 olddir=~/dotfiles_old             # old dotfiles backup directory
 files=".bashrc .bash_profile .emacs.d"        # list of files/folders to symlink in homedir
@@ -16,7 +28,7 @@ echo "Changing to the $dir directory"
 cd $dir
 echo "...done"
 
-# move any existing dotfiles in homedir to dotfiles_old directory, then create symlinks 
+# move any existing dotfiles in homedir to dotfiles_old directory, then create symlinks
 for file in $files; do
     echo "Moving any existing dotfiles from ~ to $olddir"
     mv ~/$file ~/dotfiles_old/
