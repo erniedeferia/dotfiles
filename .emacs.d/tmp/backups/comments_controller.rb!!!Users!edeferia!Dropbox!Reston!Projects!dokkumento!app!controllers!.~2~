@@ -1,8 +1,0 @@
-class CommentsController < InheritedResources::Base
-
-  private
-
-    def comment_params
-      params.require(:comment).permit(:title, :description, :comment_dt, :comment_type)
-    end
-end

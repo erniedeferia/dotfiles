@@ -1,6 +1,0 @@
-$(document).ready( function() {
-
-  if( alexandria_cloud.shouldExecuteModuleFn("") ) {
-
-  }
-});

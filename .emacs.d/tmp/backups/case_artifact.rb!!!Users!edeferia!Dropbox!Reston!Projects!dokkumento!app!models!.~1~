@@ -1,9 +1,0 @@
-class CaseArtifact
-  include CoreModel
-
-  f_string :name
-  f_string :description
-
-
-
-end

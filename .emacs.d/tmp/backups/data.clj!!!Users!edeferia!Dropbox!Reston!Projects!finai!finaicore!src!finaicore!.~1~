@@ -1,3 +1,0 @@
-(ns finaicore.core
- (:use (incanter core stats))
- )

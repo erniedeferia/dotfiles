@@ -1,6 +1,0 @@
-class AccountPlan
-  include CoreModel
-
- f_string :name
-
-end

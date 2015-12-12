@@ -1,5 +1,0 @@
-<h2>Import Contacts from CSV (Comma Separated Values)</h2>
-<%= form_tag  upload_contacts_path, multipart: true do %>
-  <%= file_field_tag :file %>
-  <%= submit_tag "Import" %>
-<% end %>

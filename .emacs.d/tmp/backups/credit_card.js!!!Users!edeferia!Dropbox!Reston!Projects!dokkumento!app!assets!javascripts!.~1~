@@ -1,2 +1,0 @@
-   $('#contact_mobile_number').mask("(999) 999-9999? x99999");
-   $('#contact_home_number').mask("(999) 999-9999? x99999");

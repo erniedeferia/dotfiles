@@ -1,5 +1,0 @@
-exports.up = function(knex) {
- return knex.schema.table('clients', function(t) {
-   t.boolean('archived').notNullable().default(false);
- });
-};

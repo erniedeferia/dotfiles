@@ -1,8 +1,0 @@
-class AssociationObserver
-  observe :association
-
-  def after_save(association)
-    puts "(0)^(0) observing save event for #{association.case} with contact #{association.contact} and type #{association.association_type}"
-  end
-
-end

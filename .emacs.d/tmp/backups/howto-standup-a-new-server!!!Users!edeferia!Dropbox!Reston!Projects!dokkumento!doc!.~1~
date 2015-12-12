@@ -1,4 +1,0 @@
-1. Run this script to create the server and provision it
-./dokk_create_webserver staging
-
-2. Search output of first step for the key and associated in github with the dokkumento repository

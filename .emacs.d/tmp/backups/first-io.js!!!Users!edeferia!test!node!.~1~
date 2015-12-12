@@ -1,9 +1,0 @@
-var fs = require("fs");
-
-var buf = fs.readyFileSync( process.argv[2] );
-
-var content = buf.toString();
-
-var count = content.split('\n');
-
-console.log(count-1);

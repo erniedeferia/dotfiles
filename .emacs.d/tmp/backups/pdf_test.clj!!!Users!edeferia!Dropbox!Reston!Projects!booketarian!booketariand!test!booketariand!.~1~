@@ -1,4 +1,0 @@
-(ns booketariand.core-test
-  (:require [clojure.test :refer :all]
-            [clojure.java.shell :only [:sh]]
-            [booketariand.pdf.extractor :refer :all]))

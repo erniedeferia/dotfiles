@@ -1,6 +1,0 @@
-class CommentType
-  include CoreModel
-  f_string :name
-  belongs_to :case
-
-end

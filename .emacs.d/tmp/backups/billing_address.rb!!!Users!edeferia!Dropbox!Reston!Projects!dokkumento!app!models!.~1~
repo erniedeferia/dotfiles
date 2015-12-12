@@ -1,4 +1,0 @@
-# Represents the organization's billing address
-class BillingAddress < Address
-  embedded_in :contact, :polymorphic => true
-end

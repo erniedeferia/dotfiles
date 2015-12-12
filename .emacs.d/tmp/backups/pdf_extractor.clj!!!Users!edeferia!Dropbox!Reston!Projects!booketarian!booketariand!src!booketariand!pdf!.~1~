@@ -1,4 +1,0 @@
-(ns booketariand.core
-  (:use [clojure.java.shell :only [sh]]
-        [me.raynes.fs :as fsutil] ;; requires JDK 7 (1.7)
-        ))

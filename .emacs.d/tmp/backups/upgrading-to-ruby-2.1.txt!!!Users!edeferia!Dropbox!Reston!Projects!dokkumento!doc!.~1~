@@ -1,4 +1,0 @@
-1. upgrade rvm to latest version. https://rvm.io/rvm/upgrading
-  $ rvm get stable
-
-2. install latest ruby

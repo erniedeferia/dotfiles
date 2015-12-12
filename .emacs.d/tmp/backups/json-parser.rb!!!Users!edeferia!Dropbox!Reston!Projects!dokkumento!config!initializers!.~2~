@@ -1,3 +1,0 @@
-#ActiveSupport::JSON.backend = "json/pure"
-#MultiJson.engine = :oj
-MultiJson.engine = :json_pure

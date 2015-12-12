@@ -1,4 +1,0 @@
-1. A feature built on top of activity auditing and logging which builds a summary of work performed by the firm and sent to the client via email. Of course, the resulting report is editable.
-
-2. A document conversion of text extraction service. Host a RESTful API to convert documents and
-produce extracted text in a nicely package way.

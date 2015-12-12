@@ -1,7 +1,0 @@
-doctype html
-html(lang="en")
- head
-  title= pageTitle
-  script(type='text/javascript').
- body
-   h4 This is all the help you're gonna get!

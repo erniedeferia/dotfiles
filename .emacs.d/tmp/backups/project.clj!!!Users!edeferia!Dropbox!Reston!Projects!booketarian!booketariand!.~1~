@@ -1,9 +1,0 @@
-(defproject booketariand "0.1.0-SNAPSHOT"
-  :description "Extracts text from documents of any format."
-  :url "http://www.bookarian.com"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]]
-  :main ^:skip-aot booketariand.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
