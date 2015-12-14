@@ -37,3 +37,9 @@ for file in $files; do
 done
 
 source ~/.bash_profile
+
+echo "----------------------------------------------------------------------------"
+echo "If this is a new installation, you might want to install Oracle Virtualbox: "
+echo ">  brew install caskroom/cask/brew-cask"
+echo ">  brew cask install virtualbox"
+echo "----------------------------------------------------------------------------"
